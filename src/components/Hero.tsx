@@ -1,9 +1,26 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 
 export default function Hero() {
   const { t } = useTranslation();
+
+  // ✅ Rotating role text
+  const roles = [
+    'Software Engineer',
+    'Website Developer',
+    'App Developer'
+  ];
+  const [roleIndex, setRoleIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRoleIndex((prev) => (prev + 1) % roles.length);
+    }, 3000); // change every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -26,9 +43,23 @@ export default function Hero() {
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-6">
             <span className="text-gradient">{t('hero.name')}</span>
           </h1>
-          <h3 className="text-2xl md:text-4xl font-bold text-zinc-700 dark:text-zinc-300 mb-8">
-            {t('hero.role')}
-          </h3>
+
+          {/* ✅ Rotating Role Text with animation */}
+          <div className="h-16 md:h-20 flex items-center justify-center mb-8">
+            <AnimatePresence mode="wait">
+              <motion.h3
+                key={roleIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="text-2xl md:text-4xl font-bold text-zinc-700 dark:text-zinc-300"
+              >
+                {roles[roleIndex]}
+              </motion.h3>
+            </AnimatePresence>
+          </div>
+
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-zinc-600 dark:text-zinc-400 mb-10 leading-relaxed">
             {t('hero.description')}
           </p>

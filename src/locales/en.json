@@ -10,7 +10,12 @@
     "greeting": "Hello, I'm",
     "name": "Temesgen Minwyelet",
     "role": "Software Engineer",
-    "description": "I build ultra-modern, high-performance web applications and digital experiences.",
+    "roles": [
+      "Software Engineer",
+      "Website Developer",
+      "App Developer"
+    ],
+    "description": "I build modern website's , Application's , WebApp's.",
     "hireMe": "Hire Me",
     "viewProjects": "View Projects"
   },
@@ -18,7 +23,20 @@
     "title": "About Me",
     "story": "I am a passionate Software Engineer dedicated to crafting world-class digital solutions. With a strong foundation in modern web technologies, I specialize in building scalable, performant, and visually stunning applications. My approach combines technical excellence with an eye for premium design.",
     "skills": "Core Skills",
-    "techStack": "Tech Stack"
+    "techStack": "Tech Stack",
+    "softSkillsTitle": "Soft Skills",
+    "softSkills": [
+      "Communication",
+      "Teamwork & Collaboration",
+      "Problem Solving",
+      "Time Management",
+      "Adaptability",
+      "Leadership",
+      "Microsoft Word",
+      "Microsoft Excel",
+      "PDF Typing",
+      "Data Entry"
+    ]
   },
   "github": {
     "title": "GitHub Activity",

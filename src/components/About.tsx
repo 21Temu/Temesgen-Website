@@ -38,7 +38,11 @@ export default function About() {
     'Problem Solving',
     'Time Management',
     'Adaptability',
-    'Leadership'
+    'Leadership',
+    'Microsoft Word',
+    'Microsoft Excel',
+    'PDF Typing',
+    'Data Entry'
   ];
 
   return (

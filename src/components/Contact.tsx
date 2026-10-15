@@ -15,13 +15,7 @@ export default function Contact() {
     setIsSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-
-    if (!accessKey) {
-      toast.error("Email service not configured. Please add VITE_WEB3FORMS_ACCESS_KEY to your secrets.");
-      setIsSubmitting(false);
-      return;
-    }
+    const accessKey = "9054b0c2-833e-4151-bd3c-798f180d6cb9";
 
     const object = Object.fromEntries(formData);
     const json = JSON.stringify({
