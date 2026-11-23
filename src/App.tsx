@@ -14,6 +14,7 @@ import Certificates from './components/Certificates';
 import Services from './components/Services';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import PortfolioChatbot from "./components/PortfolioChatbot";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         <Contact />
       </main>
       <Footer />
+      <PortfolioChatbot />
     </div>
   );
 }
