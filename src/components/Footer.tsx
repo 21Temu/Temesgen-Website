@@ -1,334 +1,281 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'motion/react';
-
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform
+} from 'motion/react';
 import {
   Github,
   Linkedin,
   MessageCircle,
   Send,
   ArrowUp,
-  Heart,
   Code2,
-  Sparkles,
-  ExternalLink
+  Sparkles
 } from 'lucide-react';
-
-// ==========================================
-// SOCIAL LINKS
-// ==========================================
 
 const socialLinks = [
   {
     name: 'GitHub',
     icon: Github,
-    href: 'https://github.com/21Temu',
-    color: 'hover:text-white',
-    bg: 'hover:bg-zinc-800',
-    border: 'hover:border-zinc-600'
+    href: 'https://github.com/21Temu'
   },
   {
     name: 'LinkedIn',
     icon: Linkedin,
-    href: '#',
-    color: 'hover:text-blue-500',
-    bg: 'hover:bg-blue-500/10',
-    border: 'hover:border-blue-500/30'
+    href: '#'
   },
   {
     name: 'TikTok',
     icon: MessageCircle,
-    href: '#',
-    color: 'hover:text-pink-500',
-    bg: 'hover:bg-pink-500/10',
-    border: 'hover:border-pink-500/30'
+    href: '#'
   },
   {
     name: 'Telegram',
     icon: Send,
-    href: 'https://t.me/abu_orthodox',
-    color: 'hover:text-sky-500',
-    bg: 'hover:bg-sky-500/10',
-    border: 'hover:border-sky-500/30'
+    href: 'https://t.me/abu_orthodox'
   }
 ];
 
-// ==========================================
-// MAIN FOOTER
-// ==========================================
+const navLinks = [
+  { name: 'Home', href: '#home' },
+  { name: 'About', href: '#about' },
+  { name: 'Projects', href: '#projects' },
+  { name: 'Skills', href: '#skills' },
+  { name: 'Experience', href: '#experience' },
+  { name: 'Certificates', href: '#certificates' },
+  { name: 'Services', href: '#services' },
+  { name: 'Contact', href: '#contact' }
+];
 
 export default function Footer() {
-
   const { t } = useTranslation();
-
   const currentYear = new Date().getFullYear();
+  const footerRef = useRef<HTMLElement | null>(null);
 
   const [showBackToTop, setShowBackToTop] = useState(false);
 
-  // ==========================================
-  // SCROLL DETECTION
-  // ==========================================
+  // 3D software background parallax (-0.5 to 0.5)
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+
+  const smoothX = useSpring(pointerX, { stiffness: 120, damping: 22 });
+  const smoothY = useSpring(pointerY, { stiffness: 120, damping: 22 });
+
+  const gridRotateX = useTransform(smoothY, [-0.5, 0.5], [66, 56]);
+  const gridRotateZ = useTransform(smoothX, [-0.5, 0.5], [-8, 8]);
+  const gridPanX = useTransform(smoothX, [-0.5, 0.5], [-30, 30]);
+  const gridPanY = useTransform(smoothY, [-0.5, 0.5], [-22, 22]);
+
+  const depthBackX = useTransform(smoothX, [-0.5, 0.5], [-20, 20]);
+  const depthBackY = useTransform(smoothY, [-0.5, 0.5], [-16, 16]);
+  const depthFrontX = useTransform(smoothX, [-0.5, 0.5], [30, -30]);
+  const depthFrontY = useTransform(smoothY, [-0.5, 0.5], [24, -24]);
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = footerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    pointerX.set(x);
+    pointerY.set(y);
+  };
+
+  const handlePointerLeave = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
 
   useEffect(() => {
-
     const handleScroll = () => {
-
       setShowBackToTop(window.scrollY > 400);
-
     };
 
-    window.addEventListener('scroll', handleScroll, {
-      passive: true
-    });
-
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-
   }, []);
 
-  // ==========================================
-  // SCROLL TO TOP
-  // ==========================================
-
   const scrollToTop = () => {
-
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
-
   };
 
-  // ==========================================
-  // RENDER
-  // ==========================================
+  const footerLogs = [
+    '0xF01  session.footer [ACTIVE]',
+    '10101  build: react · vite · ts'
+  ];
 
   return (
-
-    <footer className="relative overflow-hidden bg-white dark:bg-[#080812] border-t border-zinc-200 dark:border-white/10 transition-colors duration-500">
-
+    <footer
+      ref={footerRef}
+      onMouseMove={handlePointerMove}
+      onMouseLeave={handlePointerLeave}
+      style={{ perspective: '1250px' }}
+      className="relative overflow-hidden bg-white text-slate-900 border-t border-slate-200/80"
+    >
       {/* ======================================
-          BACKGROUND EFFECTS
+          SOFTWARE 3D ANIMATED BACKGROUND
       ====================================== */}
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
-          animate={{
-            x: [0, 50, -30, 0],
-            y: [0, -30, 30, 0]
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute -top-48 left-1/4 w-96 h-96 rounded-full bg-blue-500/10 blur-[130px]"
+          style={{ x: depthBackX, y: depthBackY }}
+          animate={{ scale: [1, 1.08, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-20 left-[15%] w-[360px] h-[360px] rounded-full bg-indigo-200/30 blur-[110px]"
+        />
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY }}
+          animate={{ scale: [1.06, 0.96, 1.06] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-0 right-[12%] w-[340px] h-[340px] rounded-full bg-emerald-200/25 blur-[110px]"
         />
 
-        <motion.div
-          animate={{
-            x: [0, -40, 30, 0],
-            y: [0, 30, -20, 0]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute -top-48 right-1/4 w-96 h-96 rounded-full bg-purple-500/10 blur-[130px]"
-        />
-
+        {/* 3D Perspective Grid */}
         <div
-          className="absolute inset-0 opacity-[0.035] dark:opacity-[0.05]"
+          className="absolute inset-x-0 bottom-[-30%] h-[80%] flex items-center justify-center"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: '45px 45px'
+            perspective: '900px',
+            maskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.12) 60%, transparent 100%)'
           }}
-        />
+        >
+          <motion.div
+            style={{
+              rotateX: gridRotateX,
+              rotateZ: gridRotateZ,
+              x: gridPanX,
+              y: gridPanY,
+              transformStyle: 'preserve-3d'
+            }}
+            animate={{ backgroundPosition: ['0px 0px', '0px 48px'] }}
+            transition={{
+              backgroundPosition: { duration: 3.8, repeat: Infinity, ease: 'linear' }
+            }}
+            className="w-[175%] h-[175%] border-t border-indigo-200/75"
+            ref={(el) => {
+              if (el) {
+                el.style.backgroundImage =
+                  'linear-gradient(to right, rgba(79, 70, 229, 0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.1) 1px, transparent 1px)';
+                el.style.backgroundSize = '48px 48px';
+              }
+            }}
+          />
+        </div>
 
+        {/* Floating 3D Wireframe Node */}
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY, transformStyle: 'preserve-3d' }}
+          animate={{
+            rotateX: [20, 44, 20],
+            rotateY: [0, 180, 360],
+            y: [0, -8, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          className="hidden md:flex items-center justify-center absolute top-8 right-[6%] w-11 h-11 rounded-xl border border-indigo-300/80 bg-white/85 font-mono text-[9px] font-semibold text-indigo-600 shadow-2xs"
+        >
+          0xFTR
+        </motion.div>
+
+        {/* Software Telemetry Streams */}
+        <motion.div
+          style={{ x: depthBackX, y: depthBackY }}
+          className="hidden xl:flex flex-col gap-1.5 absolute top-10 right-[22%] font-mono text-[10px] text-slate-600/80"
+        >
+          {footerLogs.map((line, idx) => (
+            <motion.div
+              key={line}
+              animate={{ opacity: [0.4, 0.85, 0.4], x: [0, -5, 0] }}
+              transition={{ duration: 4 + idx, repeat: Infinity, ease: 'easeInOut' }}
+              className="px-2.5 py-0.5 rounded-md bg-white/85 border border-slate-200/80 shadow-2xs"
+            >
+              {line}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
 
       {/* ======================================
-          TOP GRADIENT LINE
+          COMPACT FOOTER CONTENT
       ====================================== */}
-
-      <div className="relative h-[2px] w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-70" />
-
-      {/* ======================================
-          MAIN CONTENT
-      ====================================== */}
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-8">
-
-        {/* ======================================
-            FOOTER MAIN GRID
-        ====================================== */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-14 pb-16">
-
-          {/* BRAND */}
-
-          <div className="space-y-7">
-
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-12 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-9">
+          {/* Brand Column */}
+          <div className="md:col-span-4 space-y-3.5">
             <a
               href="#home"
               className="inline-flex items-center gap-3 group"
               aria-label="Go to homepage"
             >
-
-              <motion.div
-                whileHover={{
-                  rotate: 8,
-                  scale: 1.08
-                }}
-                className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-400 flex items-center justify-center shadow-xl shadow-blue-500/20"
-              >
-
-                <span className="text-2xl font-black text-white">
-
-                  TM
-
-                </span>
-
-                <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-
-              </motion.div>
-
-              <div>
-
-                <h3 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
-
-                  Temesgen<span className="text-blue-500">.</span>
-
-                </h3>
-
-                <p className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-500">
-
-                  Software Developer
-
-                </p>
-
+              <div className="w-10 h-10 rounded-xl bg-slate-900 group-hover:bg-indigo-600 text-white flex items-center justify-center font-mono text-sm font-black transition-colors">
+                TM
               </div>
-
+              <div>
+                <p className="text-lg font-black tracking-tight text-slate-900 leading-none">
+                  Temesgen<span className="text-indigo-600">.</span>
+                </p>
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  Software Developer
+                </span>
+              </div>
             </a>
 
-            <p className="max-w-sm text-sm leading-7 text-zinc-600 dark:text-zinc-400">
-
-              Building modern digital experiences with creativity, clean code, and a passion for technology.
-
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs">
+              Building clean, responsive web applications and reliable backend systems.
             </p>
 
-            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-
-              <Code2 className="w-4 h-4 text-blue-500" />
-
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-
-                Turning Ideas Into Code
-
-              </span>
-
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 font-mono text-[11px] font-semibold">
+              <Code2 className="w-3.5 h-3.5" />
+              <span>Turning Ideas Into Code</span>
             </div>
-
           </div>
 
-          {/* QUICK LINKS */}
-
-          <div>
-
-            <div className="flex items-center gap-3 mb-7">
-
-              <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
-
-                <Sparkles className="w-5 h-5 text-purple-500" />
-
-              </div>
-
-              <h4 className="text-lg font-black text-zinc-900 dark:text-white">
-
+          {/* Navigation Column */}
+          <div className="md:col-span-4">
+            <div className="flex items-center gap-2 mb-3.5">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-800">
                 Quick Navigation
-
               </h4>
-
             </div>
 
-            <div className="grid grid-cols-2 gap-x-5 gap-y-5">
-
-              {[
-                { name: 'Home', href: '#home' },
-                { name: 'About', href: '#about' },
-                { name: 'Projects', href: '#projects' },
-                { name: 'Skills', href: '#skills' },
-                { name: 'Experience', href: '#experience' },
-                { name: 'Certificates', href: '#certificates' },
-                { name: 'Services', href: '#services' },
-                { name: 'Contact', href: '#contact' }
-              ].map((item, index) => (
-
-                <motion.a
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {navLinks.map((item) => (
+                <a
                   key={item.name}
                   href={item.href}
-                  whileHover={{ x: 5 }}
-                  className="flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  className="text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
                 >
-
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
-
                   {item.name}
-
-                </motion.a>
-
+                </a>
               ))}
-
             </div>
-
           </div>
 
-          {/* SOCIAL LINKS */}
+          {/* Connect Column */}
+          <div className="md:col-span-4">
+            <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-800 mb-3.5">
+              Connect With Me
+            </h4>
 
-          <div>
-
-            <div className="flex items-center gap-3 mb-7">
-
-              <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
-
-                <MessageCircle className="w-5 h-5 text-blue-500" />
-
-              </div>
-
-              <h4 className="text-lg font-black text-zinc-900 dark:text-white">
-
-                Connect With Me
-
-              </h4>
-
-            </div>
-
-            <p className="text-sm leading-7 text-zinc-500 dark:text-zinc-400 mb-7">
-
-              Follow my work, explore my projects, and connect with me on social platforms.
-
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+              Explore repositories, updates, and direct channels.
             </p>
 
-            <div className="flex flex-wrap gap-3">
-
-              {socialLinks.map((link, index) => {
-
+            <div className="flex flex-wrap items-center gap-2.5">
+              {socialLinks.map((link) => {
                 const Icon = link.icon;
-
                 const isAvailable = link.href !== '#';
 
                 return (
-
-                  <motion.a
+                  <a
                     key={link.name}
                     href={link.href}
                     target={isAvailable ? '_blank' : undefined}
@@ -340,130 +287,53 @@ export default function Footer() {
                         event.preventDefault();
                       }
                     }}
-                    whileHover={isAvailable ? {
-                      y: -6,
-                      scale: 1.08
-                    } : {}}
-                    whileTap={isAvailable ? {
-                      scale: 0.95
-                    } : {}}
-                    className={`relative w-12 h-12 rounded-xl flex items-center justify-center bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 text-zinc-500 ${link.color} ${link.bg} ${link.border} transition-all duration-300 ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 transition-colors ${
+                      isAvailable
+                        ? 'hover:border-indigo-600 hover:bg-indigo-600 hover:text-white'
+                        : 'opacity-45 cursor-not-allowed'
+                    }`}
                   >
-
-                    <Icon className="w-5 h-5" />
-
-                    {isAvailable && (
-
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#080812]" />
-
-                    )}
-
-                  </motion.a>
-
+                    <Icon className="w-4 h-4" />
+                  </a>
                 );
-
               })}
-
             </div>
-
-            <a
-              href="#contact"
-              className="inline-flex items-center gap-2 mt-8 text-sm font-black text-blue-600 dark:text-blue-400 hover:gap-4 transition-all"
-            >
-
-              Let's Work Together
-
-              <ArrowUp className="w-4 h-4 rotate-45" />
-
-            </a>
-
           </div>
-
         </div>
 
-        {/* ======================================
-            DIVIDER
-        ====================================== */}
+        {/* Bottom Bar */}
+        <div className="pt-5 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <p>
+            © {currentYear}{' '}
+            <span className="font-bold text-slate-800">Temesgen Minwyelet</span>.{' '}
+            {t('footer.rights')}
+          </p>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-zinc-300 dark:via-white/15 to-transparent" />
+          <p className="font-mono text-[11px]">Built with React &amp; Tailwind CSS</p>
 
-        {/* ======================================
-            BOTTOM FOOTER
-        ====================================== */}
-
-        <div className="flex flex-col md:flex-row items-center justify-between gap-5 pt-8">
-
-          <div className="text-center md:text-left">
-
-            <p className="text-sm text-zinc-500">
-
-              © {currentYear} <span className="font-black text-zinc-800 dark:text-zinc-200">
-
-                Temesgen Minwyelet
-
-              </span>. {t('footer.rights')}
-
-            </p>
-
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
-
-            <span>Designed & Built with</span>
-
-            <motion.span
-              animate={{
-                scale: [1, 1.2, 1]
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity
-              }}
-            >
-
-              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-
-            </motion.span>
-
-            <span>and React</span>
-
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
-
+          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-emerald-700">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-
-            Available Online
-
-          </div>
-
+            <span>Available Online</span>
+          </span>
         </div>
-
       </div>
 
-      {/* ======================================
-          BACK TO TOP BUTTON
-      ====================================== */}
-
+      {/* Back to Top Button */}
       <motion.button
-        initial={{ opacity: 0, scale: 0.7 }}
+        type="button"
+        initial={{ opacity: 0, scale: 0.8 }}
         animate={{
           opacity: showBackToTop ? 1 : 0,
-          scale: showBackToTop ? 1 : 0.7,
+          scale: showBackToTop ? 1 : 0.8,
           pointerEvents: showBackToTop ? 'auto' : 'none'
         }}
         onClick={scrollToTop}
         aria-label="Scroll to top"
         title="Back to top"
-        className="fixed bottom-7 right-7 z-40 w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-xl shadow-blue-500/30 hover:shadow-purple-500/40 transition-shadow"
+        className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transition-colors"
       >
-
-        <ArrowUp className="w-5 h-5" />
-
+        <ArrowUp className="w-4 h-4" />
       </motion.button>
-
     </footer>
-
   );
-
 }

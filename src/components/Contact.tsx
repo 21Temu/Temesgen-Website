@@ -1,66 +1,42 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'motion/react';
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  useTransform
+} from 'motion/react';
 import { useInView } from 'react-intersection-observer';
 import {
   Send,
   Mail,
   Phone,
-  MapPin,
   ArrowRight,
   Sparkles,
   CheckCircle2,
   MessageCircle,
   Clock,
   Globe,
-  Github,
-  Linkedin,
   Loader2,
   AlertCircle,
   Copy,
   ExternalLink,
   Code2,
-  Zap
+  Terminal
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// ==========================================
-// TYPES
-// ==========================================
-
-interface FormFields {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
 type SubmissionStatus = 'idle' | 'success' | 'error';
 
-// ==========================================
-// CONTACT INFORMATION
-// ==========================================
-
 const CONTACT_EMAIL = 'temuclassic986@gmail.com';
-
-const CONTACT_PHONES = [
-  '0993702920',
-  '0983063679'
-];
-
-// Configure VITE_WEB3FORMS_ACCESS_KEY in your frontend .env file.
-// Remember: Vite variables are public in the browser bundle.
-const WEB3FORMS_ACCESS_KEY =
-  import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '';
-
-// ==========================================
-// MAIN COMPONENT
-// ==========================================
+const CONTACT_PHONES = ['0993702920', '0983063679'];
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '';
 
 export default function Contact() {
-
   const { t } = useTranslation();
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -68,64 +44,63 @@ export default function Contact() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [submissionStatus, setSubmissionStatus] =
-    useState<SubmissionStatus>('idle');
-
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const formRef = useRef<HTMLFormElement>(null);
+  // 3D software background parallax (-0.5 to 0.5)
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
 
-  // ==========================================
-  // COPY EMAIL
-  // ==========================================
+  const smoothX = useSpring(pointerX, { stiffness: 120, damping: 22 });
+  const smoothY = useSpring(pointerY, { stiffness: 120, damping: 22 });
+
+  const gridRotateX = useTransform(smoothY, [-0.5, 0.5], [66, 56]);
+  const gridRotateZ = useTransform(smoothX, [-0.5, 0.5], [-8, 8]);
+  const gridPanX = useTransform(smoothX, [-0.5, 0.5], [-34, 34]);
+  const gridPanY = useTransform(smoothY, [-0.5, 0.5], [-26, 26]);
+
+  const depthBackX = useTransform(smoothX, [-0.5, 0.5], [-22, 22]);
+  const depthBackY = useTransform(smoothY, [-0.5, 0.5], [-18, 18]);
+  const depthFrontX = useTransform(smoothX, [-0.5, 0.5], [34, -34]);
+  const depthFrontY = useTransform(smoothY, [-0.5, 0.5], [28, -28]);
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = sectionRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    pointerX.set(x);
+    pointerY.set(y);
+  };
+
+  const handlePointerLeave = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
 
   const copyEmail = async () => {
-
     try {
-
       await navigator.clipboard.writeText(CONTACT_EMAIL);
-
       setCopiedEmail(true);
-
       toast.success('Email address copied!');
-
       setTimeout(() => {
         setCopiedEmail(false);
       }, 2000);
-
     } catch {
-
       toast.error('Unable to copy email address.');
-
     }
-
   };
 
-  // ==========================================
-  // FORM SUBMISSION
-  // ==========================================
-
-  const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (isSubmitting) return;
 
     if (!WEB3FORMS_ACCESS_KEY) {
-
-      toast.error(
-        'Contact form is not configured. Please email me directly.'
-      );
-
+      toast.error('Contact form is not configured. Please email me directly.');
       return;
-
     }
 
     const form = event.currentTarget;
-
     const formData = new FormData(form);
 
     const name = String(formData.get('name') || '').trim();
@@ -133,38 +108,25 @@ export default function Contact() {
     const subject = String(formData.get('subject') || '').trim();
     const message = String(formData.get('message') || '').trim();
 
-    // Basic validation
-
     if (!name || !email || !message) {
-
       toast.error('Please complete all required fields.');
-
       return;
-
     }
 
     if (name.length < 2) {
-
       toast.error('Please enter a valid name.');
-
       return;
-
     }
 
     if (message.length < 10) {
-
       toast.error('Your message must contain at least 10 characters.');
-
       return;
-
     }
 
     setIsSubmitting(true);
-
     setSubmissionStatus('idle');
 
     try {
-
       const payload = {
         access_key: WEB3FORMS_ACCESS_KEY,
         name,
@@ -175,57 +137,33 @@ export default function Contact() {
         botcheck: formData.get('botcheck') || ''
       };
 
-      const response = await fetch(
-        'https://api.web3forms.com/submit',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-          },
-          body: JSON.stringify(payload)
-        }
-      );
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-
         setSubmissionStatus('success');
-
         toast.success(t('contact.success'));
-
         form.reset();
-
       } else {
-
         setSubmissionStatus('error');
-
-        toast.error(
-          data.message || t('contact.error')
-        );
-
+        toast.error(data.message || t('contact.error'));
       }
-
     } catch (error) {
-
       console.error('Contact form submission error:', error);
-
       setSubmissionStatus('error');
-
       toast.error(t('contact.error'));
-
     } finally {
-
       setIsSubmitting(false);
-
     }
-
   };
-
-  // ==========================================
-  // CONTACT LINKS
-  // ==========================================
 
   const contactMethods = [
     {
@@ -233,444 +171,279 @@ export default function Contact() {
       label: 'Email Address',
       value: CONTACT_EMAIL,
       href: `mailto:${CONTACT_EMAIL}`,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
-      action: 'Send an email'
+      badgeClass: 'bg-indigo-600 text-white'
     },
     {
       icon: Phone,
       label: 'Phone Number',
       value: CONTACT_PHONES.join(' / '),
       href: `tel:${CONTACT_PHONES[0]}`,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
-      action: 'Call me'
+      badgeClass: 'bg-violet-600 text-white'
     }
   ];
 
-  // ==========================================
-  // RENDER
-  // ==========================================
+  const contactLogs = [
+    '0xM01  web3forms.endpoint [READY]',
+    '10110  tls: encrypted · spam guard on',
+    '0x6C4  response: open to projects'
+  ];
 
   return (
-
     <section
+      ref={sectionRef}
       id="contact"
-      className="relative py-28 md:py-36 overflow-hidden bg-zinc-50 dark:bg-[#080812] transition-colors duration-500"
+      onMouseMove={handlePointerMove}
+      onMouseLeave={handlePointerLeave}
+      style={{ perspective: '1250px' }}
+      className="relative py-20 bg-white text-slate-900 overflow-hidden border-t border-slate-100"
     >
-
       {/* ======================================
-          BACKGROUND EFFECTS
+          SOFTWARE 3D ANIMATED BACKGROUND
       ====================================== */}
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
-          animate={{
-            x: [0, 50, -30, 0],
-            y: [0, -40, 30, 0],
-            scale: [1, 1.15, 0.9, 1]
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute -top-48 -left-48 w-[550px] h-[550px] rounded-full bg-blue-500/10 blur-[150px]"
+          style={{ x: depthBackX, y: depthBackY }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-24 left-[14%] w-[440px] h-[440px] rounded-full bg-indigo-200/35 blur-[120px]"
+        />
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY }}
+          animate={{ scale: [1.08, 0.95, 1.08] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-12 right-[10%] w-[420px] h-[420px] rounded-full bg-emerald-200/30 blur-[120px]"
         />
 
-        <motion.div
-          animate={{
-            x: [0, -50, 30, 0],
-            y: [0, 40, -30, 0],
-            scale: [1, 0.9, 1.15, 1]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute top-1/3 -right-48 w-[550px] h-[550px] rounded-full bg-purple-500/10 blur-[150px]"
-        />
-
+        {/* 3D Perspective Grid */}
         <div
-          className="absolute inset-0 opacity-[0.035] dark:opacity-[0.06]"
+          className="absolute inset-x-0 bottom-[-26%] h-[74%] flex items-center justify-center"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: '55px 55px'
+            perspective: '900px',
+            maskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)'
           }}
-        />
+        >
+          <motion.div
+            style={{
+              rotateX: gridRotateX,
+              rotateZ: gridRotateZ,
+              x: gridPanX,
+              y: gridPanY,
+              transformStyle: 'preserve-3d'
+            }}
+            animate={{ backgroundPosition: ['0px 0px', '0px 56px'] }}
+            transition={{
+              backgroundPosition: { duration: 3.6, repeat: Infinity, ease: 'linear' }
+            }}
+            className="w-[175%] h-[175%] border-t border-indigo-200/80"
+            ref={(el) => {
+              if (el) {
+                el.style.backgroundImage =
+                  'linear-gradient(to right, rgba(79, 70, 229, 0.13) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.12) 1px, transparent 1px)';
+                el.style.backgroundSize = '56px 56px';
+              }
+            }}
+          />
+        </div>
 
+        {/* Floating 3D Wireframe Node */}
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY, transformStyle: 'preserve-3d' }}
+          animate={{
+            rotateX: [20, 44, 20],
+            rotateY: [0, 180, 360],
+            y: [0, -12, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          className="hidden md:flex items-center justify-center absolute top-24 right-[6%] w-14 h-14 rounded-2xl border border-indigo-300/80 bg-white/85 font-mono text-[10px] font-semibold text-indigo-600 shadow-2xs"
+        >
+          0xMSG
+        </motion.div>
+
+        {/* Software Telemetry Streams */}
+        <motion.div
+          style={{ x: depthBackX, y: depthBackY }}
+          className="hidden xl:flex flex-col gap-2 absolute top-28 right-[24%] font-mono text-[11px] text-slate-600/80"
+        >
+          {contactLogs.map((line, idx) => (
+            <motion.div
+              key={line}
+              animate={{ opacity: [0.4, 0.88, 0.4], x: [0, -6, 0] }}
+              transition={{ duration: 4 + idx, repeat: Infinity, ease: 'easeInOut' }}
+              className="px-3 py-1 rounded-md bg-white/85 border border-slate-200/80 shadow-2xs"
+            >
+              {line}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
 
       {/* ======================================
           MAIN CONTENT
       ====================================== */}
-
-      <div
-        ref={ref}
-        className="relative z-10 max-w-7xl mx-auto px-6"
-      >
-
-        {/* ======================================
-            SECTION HEADER
-        ====================================== */}
-
+      <div ref={ref} className="relative z-10 max-w-6xl mx-auto px-6">
+        {/* Centered Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mx-auto text-center mb-10"
         >
-
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-7">
-
-            <MessageCircle className="w-4 h-4 text-blue-500" />
-
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600 dark:text-blue-400">
-
-              Get In Touch
-
-            </span>
-
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-200 bg-indigo-50/90 text-indigo-700 text-xs font-mono font-semibold mb-3.5">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>Get In Touch</span>
           </div>
 
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-zinc-900 dark:text-white mb-7">
-
-            {t('contact.title')}
-
-            <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400">
-
-              Let's Connect.
-
-            </span>
-
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 mb-3.5">
+            {t('contact.title')}{' '}
+            <span className="text-indigo-600">Let&apos;s Connect.</span>
           </h2>
 
-          <p className="max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-
-            Have a project idea, a question, or an opportunity? I'd be happy to hear from you. Let's create something meaningful together.
-
+          <p className="max-w-2xl mx-auto text-sm sm:text-base text-slate-600 leading-relaxed">
+            Have a project idea, technical question, or collaboration opportunity? Send a message or reach out directly.
           </p>
-
-          <div className="flex items-center justify-center gap-3 mt-9">
-
-            <div className="w-12 h-px bg-gradient-to-r from-transparent to-blue-500" />
-
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-
-            <div className="w-20 h-1 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400" />
-
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
-
-            <div className="w-12 h-px bg-gradient-to-l from-transparent to-purple-500" />
-
-          </div>
-
         </motion.div>
 
-        {/* ======================================
-            CONTACT GRID
-        ====================================== */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-
-          {/* ======================================
-              LEFT SIDE
-          ====================================== */}
-
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Compact Direct Contact & Info */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{
-              duration: 0.8,
-              delay: 0.2
-            }}
-            className="space-y-9"
+            initial={{ opacity: 0, y: 22 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="lg:col-span-5 space-y-4"
           >
-
-            {/* INTRODUCTION */}
-
-            <div>
-
-              <div className="flex items-center gap-3 mb-6">
-
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-
-                  <Sparkles className="w-6 h-6 text-white" />
-
-                </div>
-
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-500">
-
-                  Let's Talk
-
-                </span>
-
+            <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-2xs">
+              <div className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-indigo-600 mb-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Let&apos;s Talk</span>
               </div>
 
-              <h3 className="text-3xl md:text-4xl font-black leading-tight text-zinc-900 dark:text-white mb-6">
-
-                Let's talk about your next project.
-
+              <h3 className="text-xl font-black text-slate-900 mb-1.5">
+                Start a conversation about your next build.
               </h3>
 
-              <p className="text-base md:text-lg text-zinc-600 dark:text-zinc-400 leading-8">
-
-                I'm interested in software development opportunities and exciting projects. If you have an idea or want to discuss a collaboration, feel free to reach out.
-
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                Open to full-stack web projects, REST APIs, and software engineering opportunities.
               </p>
 
-            </div>
-
-            {/* AVAILABILITY CARD */}
-
-            <div className="relative overflow-hidden p-6 rounded-3xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10">
-
-              <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-emerald-500/10 blur-3xl" />
-
-              <div className="relative flex items-center gap-4">
-
-                <div className="relative">
-
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-
-                    <CheckCircle2 className="w-7 h-7 text-emerald-500" />
-
-                  </div>
-
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white dark:border-[#11111e]" />
-
+              <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
-
                 <div>
-
-                  <h4 className="font-black text-zinc-900 dark:text-white">
-
+                  <p className="text-xs sm:text-sm font-black text-slate-900">
                     Open to Opportunities
-
-                  </h4>
-
-                  <p className="text-sm text-zinc-500 mt-1">
-
-                    Feel free to contact me about suitable projects.
-
                   </p>
-
+                  <p className="text-xs text-slate-600">
+                    Available for suitable projects and roles.
+                  </p>
                 </div>
-
               </div>
-
             </div>
 
-            {/* CONTACT METHODS */}
-
-            <div className="space-y-4">
-
-              {contactMethods.map((method, index) => {
-
+            {/* Compact Contact Method Cards */}
+            <div className="space-y-3">
+              {contactMethods.map((method) => {
                 const Icon = method.icon;
-
                 return (
-
-                  <motion.a
+                  <a
                     key={method.label}
                     href={method.href}
-                    initial={{ opacity: 0, y: 25 }}
-                    animate={inView ? {
-                      opacity: 1,
-                      y: 0
-                    } : {}}
-                    transition={{
-                      duration: 0.5,
-                      delay: 0.35 + index * 0.15
-                    }}
-                    whileHover={{ x: 7 }}
-                    className="group flex items-center gap-5 p-5 rounded-2xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300"
+                    className="group flex items-center gap-3.5 p-4 rounded-2xl border border-slate-200/90 bg-white/95 hover:border-indigo-300 hover:shadow-xs transition-all duration-200"
                   >
-
-                    <div className={`w-14 h-14 rounded-2xl ${method.bg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-
-                      <Icon className={`w-6 h-6 ${method.color}`} />
-
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${method.badgeClass}`}
+                    >
+                      <Icon className="w-4 h-4" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-
-                      <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
-
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         {method.label}
-
                       </p>
-
-                      <p className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white break-all">
-
+                      <p className="text-xs sm:text-sm font-bold text-slate-900 break-all">
                         {method.value}
-
                       </p>
-
                     </div>
 
-                    <ExternalLink className="w-5 h-5 flex-shrink-0 text-zinc-400 group-hover:text-blue-500 transition-colors" />
-
-                  </motion.a>
-
+                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 shrink-0 transition-colors" />
+                  </a>
                 );
-
               })}
-
             </div>
 
-            {/* COPY EMAIL */}
-
+            {/* Copy Email Action */}
             <button
               type="button"
               onClick={copyEmail}
-              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-sm hover:bg-blue-500/20 transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50/80 text-indigo-700 font-semibold text-xs hover:bg-indigo-100/80 transition-colors"
             >
-
               {copiedEmail ? (
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               ) : (
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3.5 h-3.5" />
               )}
-
-              {copiedEmail ? 'Copied!' : 'Copy Email Address'}
-
+              <span>{copiedEmail ? 'Email Copied!' : 'Copy Email Address'}</span>
             </button>
 
-            {/* QUICK INFORMATION */}
-
-            <div className="grid grid-cols-2 gap-4">
-
-              <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10">
-
-                <Clock className="w-6 h-6 text-purple-500 mb-3" />
-
-                <h4 className="font-black text-zinc-900 dark:text-white text-sm">
-
+            {/* Compact Quick Info Tiles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-2xl border border-slate-200/90 bg-white/95">
+                <Clock className="w-4 h-4 text-indigo-600 mb-1.5" />
+                <h4 className="text-xs sm:text-sm font-black text-slate-900">
                   Flexible Communication
-
                 </h4>
-
-                <p className="text-xs text-zinc-500 mt-2 leading-5">
-
-                  Reach out through email or phone.
-
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Reach out by email or phone.
                 </p>
-
               </div>
 
-              <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10">
-
-                <Globe className="w-6 h-6 text-cyan-500 mb-3" />
-
-                <h4 className="font-black text-zinc-900 dark:text-white text-sm">
-
+              <div className="p-3.5 rounded-2xl border border-slate-200/90 bg-white/95">
+                <Globe className="w-4 h-4 text-emerald-600 mb-1.5" />
+                <h4 className="text-xs sm:text-sm font-black text-slate-900">
                   Remote Friendly
-
                 </h4>
-
-                <p className="text-xs text-zinc-500 mt-2 leading-5">
-
-                  Open to discussing remote projects.
-
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Open to remote collaboration.
                 </p>
-
               </div>
-
             </div>
-
           </motion.div>
 
-          {/* ======================================
-              RIGHT SIDE - CONTACT FORM
-          ====================================== */}
-
+          {/* Right Column: Compact Contact / Message Card */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{
-              duration: 0.8,
-              delay: 0.3
-            }}
-            className="relative"
+            initial={{ opacity: 0, y: 22 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="lg:col-span-7 max-w-xl w-full mx-auto lg:ml-auto rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-xs overflow-hidden"
           >
-
-            {/* GRADIENT BORDER */}
-
-            <div className="absolute -inset-[1px] rounded-[32px] bg-gradient-to-br from-blue-500/50 via-purple-500/30 to-cyan-500/50 blur-[1px]" />
-
-            <div className="relative overflow-hidden rounded-[31px] bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10 shadow-2xl">
-
-              {/* FORM HEADER */}
-
-              <div className="relative overflow-hidden p-7 md:p-9 bg-gradient-to-br from-blue-600 to-purple-700">
-
-                <div className="absolute -top-16 -right-16 w-52 h-52 rounded-full border border-white/10" />
-
-                <div className="absolute -bottom-24 -right-5 w-64 h-64 rounded-full border border-white/10" />
-
-                <div className="relative z-10">
-
-                  <div className="flex items-center gap-3 mb-5">
-
-                    <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-lg flex items-center justify-center">
-
-                      <Send className="w-6 h-6 text-white" />
-
-                    </div>
-
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-white/80">
-
-                      Contact Form
-
-                    </span>
-
-                  </div>
-
-                  <h3 className="text-2xl md:text-3xl font-black text-white mb-3">
-
-                    Send Me a Message
-
-                  </h3>
-
-                  <p className="text-sm text-white/75 leading-6">
-
-                    Fill out the form below and I'll receive your message directly.
-
-                  </p>
-
+            <div className="px-5 py-4 border-b border-slate-200/80 bg-slate-50/70 flex items-center justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                  <Terminal className="w-3 h-3" />
+                  <span>Contact Form</span>
                 </div>
-
+                <h3 className="text-lg sm:text-xl font-black text-slate-900">
+                  Send Me a Message
+                </h3>
               </div>
 
-              {/* FORM BODY */}
+              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <Send className="w-4 h-4" />
+              </div>
+            </div>
 
-              <div className="p-6 sm:p-8 md:p-9">
-
-                <form
-                  ref={formRef}
-                  onSubmit={handleSubmit}
-                  className="space-y-6"
-                >
-
-                  {/* NAME */}
-
+            <div className="p-5 sm:p-6">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-
                     <label
                       htmlFor="name"
-                      className="block text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-2"
+                      className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5"
                     >
-
                       {t('contact.name')} *
-
                     </label>
-
                     <input
                       type="text"
                       id="name"
@@ -680,24 +453,17 @@ export default function Contact() {
                       maxLength={100}
                       placeholder="Enter your full name"
                       autoComplete="name"
-                      className="w-full px-5 py-4 rounded-xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10 transition-all"
                     />
-
                   </div>
 
-                  {/* EMAIL */}
-
                   <div>
-
                     <label
                       htmlFor="email"
-                      className="block text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-2"
+                      className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5"
                     >
-
                       {t('contact.email')} *
-
                     </label>
-
                     <input
                       type="email"
                       id="email"
@@ -706,284 +472,161 @@ export default function Contact() {
                       maxLength={150}
                       placeholder="your@email.com"
                       autoComplete="email"
-                      className="w-full px-5 py-4 rounded-xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10 transition-all"
                     />
-
                   </div>
-
-                  {/* SUBJECT */}
-
-                  <div>
-
-                    <label
-                      htmlFor="subject"
-                      className="block text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-2"
-                    >
-
-                      Subject
-
-                    </label>
-
-                    <input
-                      type="text"
-                      id="subject"
-                      name="subject"
-                      maxLength={150}
-                      placeholder="What would you like to discuss?"
-                      className="w-full px-5 py-4 rounded-xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
-                    />
-
-                  </div>
-
-                  {/* MESSAGE */}
-
-                  <div>
-
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-2"
-                    >
-
-                      {t('contact.message')} *
-
-                    </label>
-
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      minLength={10}
-                      maxLength={3000}
-                      rows={5}
-                      placeholder="Tell me about your project, idea, or opportunity..."
-                      className="w-full px-5 py-4 rounded-xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-none"
-                    />
-
-                    <p className="text-xs text-zinc-500 mt-2">
-
-                      Please provide at least 10 characters.
-
-                    </p>
-
-                  </div>
-
-                  {/* HONEYPOT SPAM PROTECTION */}
-
-                  <div className="hidden" aria-hidden="true">
-
-                    <label htmlFor="botcheck">
-
-                      Leave this field empty
-
-                    </label>
-
-                    <input
-                      type="checkbox"
-                      id="botcheck"
-                      name="botcheck"
-                      tabIndex={-1}
-                      autoComplete="off"
-                    />
-
-                  </div>
-
-                  {/* SUBMISSION STATUS */}
-
-                  <AnimatePresence>
-
-                    {submissionStatus === 'success' && (
-
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-start gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
-                      >
-
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-
-                        <div>
-
-                          <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-
-                            Message sent successfully!
-
-                          </p>
-
-                          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
-
-                            Thank you for reaching out. Your message has been submitted.
-
-                          </p>
-
-                        </div>
-
-                      </motion.div>
-
-                    )}
-
-                    {submissionStatus === 'error' && (
-
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
-                      >
-
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-
-                        <div>
-
-                          <p className="font-bold text-red-600 dark:text-red-400 text-sm">
-
-                            Message could not be sent.
-
-                          </p>
-
-                          <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-1">
-
-                            Please try again or contact me directly by email.
-
-                          </p>
-
-                        </div>
-
-                      </motion.div>
-
-                    )}
-
-                  </AnimatePresence>
-
-                  {/* SUBMIT BUTTON */}
-
-                  <motion.button
-                    type="submit"
-                    disabled={isSubmitting}
-                    whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-                    whileTap={!isSubmitting ? { scale: 0.98 } : {}}
-                    className="relative overflow-hidden w-full py-4 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-[length:200%_100%] hover:bg-right text-white font-black text-base shadow-xl shadow-blue-500/20 transition-all duration-500 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                  >
-
-                    {isSubmitting ? (
-
-                      <>
-
-                        <Loader2 className="w-5 h-5 animate-spin" />
-
-                        {t('contact.sending')}
-
-                      </>
-
-                    ) : (
-
-                      <>
-
-                        {t('contact.send')}
-
-                        <Send className="w-5 h-5" />
-
-                      </>
-
-                    )}
-
-                  </motion.button>
-
-                  {/* PRIVACY NOTE */}
-
-                  <p className="text-center text-xs text-zinc-500 leading-6">
-
-                    Your information will only be used to respond to your message.
-
-                  </p>
-
-                </form>
-
-              </div>
-
-            </div>
-
-          </motion.div>
-
-        </div>
-
-        {/* ======================================
-            BOTTOM CTA
-        ====================================== */}
-
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{
-            duration: 0.8,
-            delay: 0.6
-          }}
-          className="mt-24"
-        >
-
-          <div className="relative overflow-hidden rounded-[30px] p-[1px] bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400">
-
-            <div className="relative overflow-hidden rounded-[29px] bg-white dark:bg-[#11111e] p-8 md:p-12">
-
-              <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-purple-500/10 blur-[100px]" />
-
-              <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-blue-500/10 blur-[100px]" />
-
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-
-                <div className="text-center md:text-left">
-
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
-
-                    <Code2 className="w-5 h-5 text-blue-500" />
-
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-500">
-
-                      Let's Create Something
-
-                    </span>
-
-                  </div>
-
-                  <h3 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-3">
-
-                    Your Next Big Idea Starts Here.
-
-                  </h3>
-
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-xl leading-7">
-
-                    Let's turn your ideas into useful, creative, and powerful digital solutions.
-
-                  </p>
-
                 </div>
 
-                <motion.a
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex-shrink-0 inline-flex items-center gap-3 px-8 py-4 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-black shadow-xl"
+                <div>
+                  <label
+                    htmlFor="subject"
+                    className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    maxLength={150}
+                    placeholder="What would you like to discuss?"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                  >
+                    {t('contact.message')} *
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    required
+                    minLength={10}
+                    maxLength={3000}
+                    rows={4}
+                    placeholder="Tell me about your project, idea, or opportunity..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10 transition-all resize-none"
+                  />
+                  <p className="font-mono text-[10px] text-slate-500 mt-1">
+                    Minimum 10 characters required.
+                  </p>
+                </div>
+
+                {/* Honeypot Spam Protection */}
+                <div className="hidden" aria-hidden="true">
+                  <label htmlFor="botcheck">Leave this field empty</label>
+                  <input
+                    type="checkbox"
+                    id="botcheck"
+                    name="botcheck"
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
+                <AnimatePresence>
+                  {submissionStatus === 'success' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-start gap-2.5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-emerald-800 text-xs sm:text-sm">
+                          Message sent successfully!
+                        </p>
+                        <p className="text-xs text-emerald-700 mt-0.5">
+                          Thank you for reaching out. Your message has been submitted.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {submissionStatus === 'error' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-200"
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-red-800 text-xs sm:text-sm">
+                          Message could not be sent.
+                        </p>
+                        <p className="text-xs text-red-700 mt-0.5">
+                          Please try again or contact me directly by email.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 px-5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs sm:text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{t('contact.sending')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t('contact.send')}</span>
+                      <Send className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
 
-                  Email Me
-
-                  <ArrowRight className="w-5 h-5" />
-
-                </motion.a>
-
-              </div>
-
+                <p className="text-center text-[11px] text-slate-500">
+                  Your information is only used to respond to your message.
+                </p>
+              </form>
             </div>
+          </motion.div>
+        </div>
 
+        {/* Bottom CTA Strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, delay: 0.25 }}
+          className="mt-12 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 sm:p-7 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-5"
+        >
+          <div className="flex items-start gap-3.5 max-w-2xl">
+            <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+              <Code2 className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="block font-mono text-[11px] font-bold uppercase tracking-wider text-indigo-600 mb-0.5">
+                Let&apos;s Create Something
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+                Your Next Big Idea Starts Here.
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                Turn your project goals into clean, dependable web and backend software.
+              </p>
+            </div>
           </div>
 
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold text-xs sm:text-sm hover:bg-indigo-600 transition-colors shrink-0"
+          >
+            <span>Email Me</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
         </motion.div>
-
       </div>
-
     </section>
-
   );
-
 }

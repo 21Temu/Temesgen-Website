@@ -1,9 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useInView } from 'react-intersection-observer';
-
 import {
   Code2,
   Database,
@@ -17,19 +15,12 @@ import {
   Layers,
   Zap,
   Globe,
-  ShieldCheck,
-  Palette,
   Server,
   MonitorSmartphone,
   Rocket,
-  ExternalLink,
   Workflow,
-  MousePointer2
+  Terminal
 } from 'lucide-react';
-
-// ==========================================
-// SERVICE INTERFACE
-// ==========================================
 
 interface Service {
   id: number;
@@ -39,19 +30,12 @@ interface Service {
   definition: string;
   whatIWillBuild: string;
   icon: React.ElementType;
-  color: string;
-  secondaryColor: string;
-  bg: string;
-  gradient: string;
+  badgeClass: string;
   technologies: string[];
   features: string[];
   deliverables: string[];
   number: string;
 }
-
-// ==========================================
-// 3D SERVICE CARD
-// ==========================================
 
 function ServiceCard({
   service,
@@ -64,34 +48,28 @@ function ServiceCard({
   inView: boolean;
   onClick: (service: Service) => void;
 }) {
-
   const cardRef = useRef<HTMLDivElement>(null);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
   const rotateX = useSpring(
-    useTransform(mouseY, [-0.5, 0.5], [8, -8]),
-    { stiffness: 180, damping: 20 }
+    useTransform(mouseY, [-0.5, 0.5], [6, -6]),
+    { stiffness: 160, damping: 22 }
   );
 
   const rotateY = useSpring(
-    useTransform(mouseX, [-0.5, 0.5], [-8, 8]),
-    { stiffness: 180, damping: 20 }
+    useTransform(mouseX, [-0.5, 0.5], [-6, 6]),
+    { stiffness: 160, damping: 22 }
   );
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-
     if (!cardRef.current) return;
-
     const rect = cardRef.current.getBoundingClientRect();
-
     const x = (event.clientX - rect.left) / rect.width - 0.5;
     const y = (event.clientY - rect.top) / rect.height - 0.5;
-
     mouseX.set(x);
     mouseY.set(y);
-
   };
 
   const handleMouseLeave = () => {
@@ -102,19 +80,13 @@ function ServiceCard({
   const Icon = service.icon;
 
   return (
-
     <motion.div
-      initial={{ opacity: 0, y: 70, scale: 0.9 }}
-      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{
-        duration: 0.7,
-        delay: index * 0.15,
-        ease: 'easeOut'
-      }}
-      style={{ perspective: 1200 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay: index * 0.08, ease: 'easeOut' }}
+      style={{ perspective: 1100 }}
       className="h-full"
     >
-
       <motion.div
         ref={cardRef}
         onMouseMove={handleMouseMove}
@@ -134,229 +106,115 @@ function ServiceCard({
         role="button"
         tabIndex={0}
         aria-label={`Explore ${service.title} services`}
-        className={`group relative h-full min-h-[390px] rounded-[30px] p-[1px] bg-gradient-to-br ${service.gradient} cursor-pointer`}
+        className="group h-full flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-2xs hover:border-indigo-300 hover:shadow-md transition-all duration-300 cursor-pointer"
       >
+        <div>
+          {/* Top Row: Compact Icon & Number */}
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center ${service.badgeClass}`}
+            >
+              <Icon className="w-5 h-5" />
+            </div>
 
-        <div className="relative h-full min-h-[388px] flex flex-col overflow-hidden rounded-[29px] bg-white dark:bg-[#11111e] shadow-xl group-hover:shadow-[0_25px_80px_rgba(99,102,241,0.15)] transition-shadow duration-500">
-
-          {/* Animated Background */}
-
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
-            <motion.div
-              animate={{
-                x: [0, 30, -20, 0],
-                y: [0, -30, 20, 0]
-              }}
-              transition={{
-                duration: 12,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-              className={`absolute -top-20 -right-20 w-64 h-64 rounded-full ${service.bg} blur-[90px] opacity-60`}
-            />
-
+            <span className="font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-50 border border-slate-200/80 text-slate-500">
+              #{service.number}
+            </span>
           </div>
 
-          {/* Card Content */}
-
-          <div className="relative z-10 p-8 flex-1 flex flex-col">
-
-            {/* Top Row */}
-
-            <div className="flex items-center justify-between mb-9">
-
-              <div className={`w-16 h-16 rounded-2xl ${service.bg} border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
-
-                <Icon className={`w-8 h-8 ${service.color}`} />
-
-              </div>
-
-              <span className="text-5xl font-black text-zinc-200 dark:text-white/[0.06] group-hover:text-blue-500/20 transition-colors">
-
-                {service.number}
-
-              </span>
-
-            </div>
-
-            {/* Title */}
-
-            <div className="mb-4">
-
-              <span className={`text-xs font-black uppercase tracking-[0.2em] ${service.color}`}>
-
-                {service.subtitle}
-
-              </span>
-
-              <h3 className="text-2xl md:text-3xl font-black mt-3 text-zinc-900 dark:text-white group-hover:translate-x-1 transition-transform">
-
-                {service.title}
-
-              </h3>
-
-            </div>
-
-            {/* Description */}
-
-            <p className="text-sm leading-7 text-zinc-600 dark:text-zinc-400 mb-7">
-
-              {service.description}
-
-            </p>
-
-            {/* Technology Tags */}
-
-            <div className="flex flex-wrap gap-2 mb-8">
-
-              {service.technologies.slice(0, 3).map((tech) => (
-
-                <span
-                  key={tech}
-                  className="px-3 py-2 rounded-lg text-xs font-bold bg-zinc-100 dark:bg-white/[0.05] text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-white/10"
-                >
-
-                  {tech}
-
-                </span>
-
-              ))}
-
-              {service.technologies.length > 3 && (
-
-                <span className="px-3 py-2 rounded-lg text-xs font-bold bg-zinc-100 dark:bg-white/[0.05] text-zinc-500">
-
-                  +{service.technologies.length - 3}
-
-                </span>
-
-              )}
-
-            </div>
-
-            {/* Bottom Action */}
-
-            <div className="mt-auto pt-6 border-t border-zinc-200 dark:border-white/10 flex items-center justify-between">
-
-              <span className="text-sm font-black text-zinc-900 dark:text-white">
-
-                Explore Service
-
-              </span>
-
-              <motion.div
-                whileHover={{ x: 5 }}
-                className={`w-11 h-11 rounded-xl ${service.bg} flex items-center justify-center`}
-              >
-
-                <ArrowRight className={`w-5 h-5 ${service.color}`} />
-
-              </motion.div>
-
-            </div>
-
-          </div>
-
+          {/* Title Only */}
+          <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
+            {service.title}
+          </h3>
         </div>
 
+        {/* Footer Action */}
+        <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+          <span>Explore Service</span>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+        </div>
       </motion.div>
-
     </motion.div>
-
   );
-
 }
 
-// ==========================================
-// MAIN SERVICES COMPONENT
-// ==========================================
-
 export default function Services() {
-
   const { t } = useTranslation();
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1
   });
 
-  const [selectedService, setSelectedService] =
-    useState<Service | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  // ==========================================
-  // BODY SCROLL LOCK
-  // ==========================================
+  // 3D software background parallax (-0.5 to 0.5)
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+
+  const smoothX = useSpring(pointerX, { stiffness: 120, damping: 22 });
+  const smoothY = useSpring(pointerY, { stiffness: 120, damping: 22 });
+
+  const gridRotateX = useTransform(smoothY, [-0.5, 0.5], [66, 56]);
+  const gridRotateZ = useTransform(smoothX, [-0.5, 0.5], [-8, 8]);
+  const gridPanX = useTransform(smoothX, [-0.5, 0.5], [-34, 34]);
+  const gridPanY = useTransform(smoothY, [-0.5, 0.5], [-26, 26]);
+
+  const depthBackX = useTransform(smoothX, [-0.5, 0.5], [-22, 22]);
+  const depthBackY = useTransform(smoothY, [-0.5, 0.5], [-18, 18]);
+  const depthFrontX = useTransform(smoothX, [-0.5, 0.5], [34, -34]);
+  const depthFrontY = useTransform(smoothY, [-0.5, 0.5], [28, -28]);
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = sectionRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    pointerX.set(x);
+    pointerY.set(y);
+  };
+
+  const handlePointerLeave = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
 
   useEffect(() => {
-
     if (selectedService) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-
     return () => {
       document.body.style.overflow = '';
     };
-
   }, [selectedService]);
 
-  // ==========================================
-  // ESCAPE KEY
-  // ==========================================
-
   useEffect(() => {
-
     const handleKeyDown = (event: KeyboardEvent) => {
-
       if (event.key === 'Escape') {
         setSelectedService(null);
       }
-
     };
-
     window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // ==========================================
-  // SERVICE DATA
-  // ==========================================
-
   const services: Service[] = [
-
     {
       id: 1,
       number: '01',
-
       title: 'Web Development',
-
       subtitle: 'Modern Web Experiences',
-
       description:
-        'Building beautiful, fast, responsive, and user-friendly websites that help businesses establish a strong digital presence.',
-
+        'Building fast, responsive, and user-friendly websites that establish a clear and reliable digital presence.',
       definition:
         'Web development is the process of designing, building, and maintaining websites and web applications. It combines frontend interfaces, backend functionality, performance optimization, accessibility, and responsive design.',
-
       whatIWillBuild:
-        'I can develop modern websites and interactive web applications using React and other modern frontend technologies. The focus is on clean interfaces, responsive layouts, reusable components, performance, and a smooth user experience.',
-
+        'I build modern websites and interactive web applications using React and modern frontend tools with clean layouts, reusable components, and smooth responsiveness.',
       icon: Layout,
-
-      color: 'text-blue-500',
-
-      secondaryColor: 'text-cyan-500',
-
-      bg: 'bg-blue-500/10',
-
-      gradient: 'from-blue-500/60 via-cyan-500/30 to-purple-500/50',
-
+      badgeClass: 'bg-indigo-600 text-white',
       technologies: [
         'React',
         'JavaScript',
@@ -365,7 +223,6 @@ export default function Services() {
         'HTML5',
         'CSS3'
       ],
-
       features: [
         'Responsive website development',
         'Modern user interfaces',
@@ -374,43 +231,26 @@ export default function Services() {
         'Cross-browser compatibility',
         'Reusable components'
       ],
-
       deliverables: [
         'Business websites',
         'Personal portfolios',
         'Landing pages',
         'Interactive web applications'
       ]
-
     },
-
     {
       id: 2,
       number: '02',
-
       title: 'Backend Development',
-
       subtitle: 'Powerful Server Architecture',
-
       description:
-        'Developing secure APIs, database systems, authentication, and reliable server-side applications.',
-
+        'Developing structured APIs, database schemas, authentication flows, and dependable server-side logic.',
       definition:
-        'Backend development focuses on the server-side functionality of an application. It manages business logic, APIs, databases, authentication, authorization, and communication between different application components.',
-
+        'Backend development focuses on the server-side functionality of an application. It manages business logic, APIs, databases, authentication, authorization, and communication between application components.',
       whatIWillBuild:
-        'I can develop backend applications and REST APIs using Django REST Framework and Laravel. This includes database modeling, authentication, API endpoints, data validation, permissions, and structured application architecture.',
-
+        'I build backend services and REST APIs using Django REST Framework and Laravel with relational modeling, validation, role permissions, and clean endpoints.',
       icon: Database,
-
-      color: 'text-purple-500',
-
-      secondaryColor: 'text-violet-500',
-
-      bg: 'bg-purple-500/10',
-
-      gradient: 'from-purple-500/60 via-violet-500/30 to-pink-500/50',
-
+      badgeClass: 'bg-violet-600 text-white',
       technologies: [
         'Python',
         'Django',
@@ -419,7 +259,6 @@ export default function Services() {
         'Laravel',
         'MySQL'
       ],
-
       features: [
         'REST API development',
         'Database architecture',
@@ -428,43 +267,26 @@ export default function Services() {
         'Data validation',
         'API documentation'
       ],
-
       deliverables: [
         'REST APIs',
         'Admin dashboards',
         'Authentication systems',
         'Database-driven applications'
       ]
-
     },
-
     {
       id: 3,
       number: '03',
-
       title: 'Full-Stack Solutions',
-
       subtitle: 'Complete Application Development',
-
       description:
-        'Creating complete digital products by combining frontend, backend, database, and application functionality.',
-
+        'Delivering end-to-end applications that connect frontend interfaces, REST APIs, and persistent databases.',
       definition:
         'Full-stack development involves building both the frontend and backend of an application. It connects user interfaces with server-side logic, APIs, and databases to create a complete working system.',
-
       whatIWillBuild:
-        'I can develop end-to-end web applications, from planning the database and designing APIs to building interactive React interfaces and connecting everything together. The goal is a maintainable, functional, and scalable application.',
-
+        'I deliver end-to-end web systems—from database design and backend APIs to interactive React interfaces, dashboards, and deployment readiness.',
       icon: Code2,
-
-      color: 'text-pink-500',
-
-      secondaryColor: 'text-rose-500',
-
-      bg: 'bg-pink-500/10',
-
-      gradient: 'from-pink-500/60 via-purple-500/30 to-blue-500/50',
-
+      badgeClass: 'bg-slate-900 text-white',
       technologies: [
         'React',
         'Django REST Framework',
@@ -473,7 +295,6 @@ export default function Services() {
         'JavaScript',
         'REST APIs'
       ],
-
       features: [
         'Frontend and backend integration',
         'Complete authentication flows',
@@ -482,43 +303,26 @@ export default function Services() {
         'API integration',
         'Application deployment support'
       ],
-
       deliverables: [
         'E-commerce platforms',
         'Management systems',
         'Learning platforms',
         'Business applications'
       ]
-
     },
-
     {
       id: 4,
       number: '04',
-
       title: 'UI/UX Design',
-
       subtitle: 'Creative Digital Interfaces',
-
       description:
-        'Designing intuitive, visually appealing, and user-centered interfaces for websites and digital applications.',
-
+        'Crafting clear, consistent, and accessible interfaces focused on usability across desktop and mobile screens.',
       definition:
         'UI design focuses on the visual appearance and interactive elements of a product. UX design focuses on how users interact with that product, including usability, accessibility, navigation, and the overall experience.',
-
       whatIWillBuild:
-        'I can create structured, modern interfaces with clear layouts, consistent visual elements, thoughtful navigation, and responsive design. The goal is to make digital products easier and more enjoyable to use.',
-
+        'I design structured interfaces with clear visual hierarchy, consistent spacing, intuitive navigation, and responsive layouts tailored to user workflows.',
       icon: Smartphone,
-
-      color: 'text-orange-500',
-
-      secondaryColor: 'text-amber-500',
-
-      bg: 'bg-orange-500/10',
-
-      gradient: 'from-orange-500/60 via-amber-500/30 to-pink-500/50',
-
+      badgeClass: 'bg-emerald-600 text-white',
       technologies: [
         'Figma',
         'Tailwind CSS',
@@ -527,7 +331,6 @@ export default function Services() {
         'Responsive Design',
         'Prototyping'
       ],
-
       features: [
         'User interface design',
         'Responsive layouts',
@@ -536,154 +339,138 @@ export default function Services() {
         'Wireframes and prototypes',
         'Interactive components'
       ],
-
       deliverables: [
         'Website interface designs',
         'Dashboard layouts',
         'Mobile-friendly interfaces',
         'Design prototypes'
       ]
-
     }
-
   ];
 
-  // ==========================================
-  // CLOSE MODAL
-  // ==========================================
+  const serviceLogs = [
+    '0xS01  services.ready(4 modules)',
+    '10101  api: rest · auth · db synced',
+    '0x8E2  ui: responsive & accessible'
+  ];
 
-  const closeModal = () => {
-    setSelectedService(null);
-  };
-
-  // ==========================================
-  // RENDER
-  // ==========================================
+  const closeModal = () => setSelectedService(null);
 
   return (
-
     <section
+      ref={sectionRef}
       id="services"
-      className="relative py-28 md:py-36 overflow-hidden bg-zinc-50 dark:bg-[#080812] transition-colors duration-500"
+      onMouseMove={handlePointerMove}
+      onMouseLeave={handlePointerLeave}
+      style={{ perspective: '1250px' }}
+      className="relative py-20 bg-white text-slate-900 overflow-hidden border-t border-slate-100"
     >
-
       {/* ======================================
-          BACKGROUND EFFECTS
+          SOFTWARE 3D ANIMATED BACKGROUND
       ====================================== */}
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
-          animate={{
-            x: [0, 60, -30, 0],
-            y: [0, -50, 40, 0],
-            scale: [1, 1.2, 0.9, 1]
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute -top-48 -left-48 w-[550px] h-[550px] rounded-full bg-blue-500/10 blur-[150px]"
+          style={{ x: depthBackX, y: depthBackY }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-24 left-[14%] w-[440px] h-[440px] rounded-full bg-indigo-200/35 blur-[120px]"
+        />
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY }}
+          animate={{ scale: [1.08, 0.95, 1.08] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-12 right-[10%] w-[420px] h-[420px] rounded-full bg-emerald-200/30 blur-[120px]"
         />
 
-        <motion.div
-          animate={{
-            x: [0, -70, 40, 0],
-            y: [0, 50, -30, 0],
-            scale: [1, 0.9, 1.2, 1]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute top-1/2 -right-48 w-[550px] h-[550px] rounded-full bg-purple-500/10 blur-[150px]"
-        />
-
+        {/* 3D Perspective Grid */}
         <div
-          className="absolute inset-0 opacity-[0.035] dark:opacity-[0.06]"
+          className="absolute inset-x-0 bottom-[-26%] h-[74%] flex items-center justify-center"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: '55px 55px'
+            perspective: '900px',
+            maskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)'
           }}
-        />
+        >
+          <motion.div
+            style={{
+              rotateX: gridRotateX,
+              rotateZ: gridRotateZ,
+              x: gridPanX,
+              y: gridPanY,
+              transformStyle: 'preserve-3d'
+            }}
+            animate={{ backgroundPosition: ['0px 0px', '0px 56px'] }}
+            transition={{
+              backgroundPosition: { duration: 3.6, repeat: Infinity, ease: 'linear' }
+            }}
+            className="w-[175%] h-[175%] border-t border-indigo-200/80"
+            ref={(el) => {
+              if (el) {
+                el.style.backgroundImage =
+                  'linear-gradient(to right, rgba(79, 70, 229, 0.13) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.12) 1px, transparent 1px)';
+                el.style.backgroundSize = '56px 56px';
+              }
+            }}
+          />
+        </div>
 
+        {/* Floating 3D Wireframe Node */}
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY, transformStyle: 'preserve-3d' }}
+          animate={{
+            rotateX: [20, 44, 20],
+            rotateY: [0, 180, 360],
+            y: [0, -12, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          className="hidden md:flex items-center justify-center absolute top-24 right-[6%] w-14 h-14 rounded-2xl border border-indigo-300/80 bg-white/85 font-mono text-[10px] font-semibold text-indigo-600 shadow-2xs"
+        >
+          0xSVC
+        </motion.div>
+
+        {/* Software Telemetry Streams */}
+        <motion.div
+          style={{ x: depthBackX, y: depthBackY }}
+          className="hidden xl:flex flex-col gap-2 absolute top-28 right-[24%] font-mono text-[11px] text-slate-600/80"
+        >
+          {serviceLogs.map((line, idx) => (
+            <motion.div
+              key={line}
+              animate={{ opacity: [0.4, 0.88, 0.4], x: [0, -6, 0] }}
+              transition={{ duration: 4 + idx, repeat: Infinity, ease: 'easeInOut' }}
+              className="px-3 py-1 rounded-md bg-white/85 border border-slate-200/80 shadow-2xs"
+            >
+              {line}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
 
       {/* ======================================
           MAIN CONTENT
       ====================================== */}
-
-      <div
-        ref={ref}
-        className="relative z-10 max-w-7xl mx-auto px-6"
-      >
-
-        {/* HEADER */}
-
+      <div ref={ref} className="relative z-10 max-w-6xl mx-auto px-6">
+        {/* Centered Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mx-auto text-center mb-10"
         >
-
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-7">
-
-            <Sparkles className="w-4 h-4 text-blue-500" />
-
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-blue-600 dark:text-blue-400">
-
-              What I Can Do For You
-
-            </span>
-
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-200 bg-indigo-50/90 text-indigo-700 text-xs font-mono font-semibold mb-3.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>What I Can Do For You</span>
           </div>
 
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-zinc-900 dark:text-white mb-7">
-
-            {t('services.title')}
-
-            <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400">
-
-              Turning Ideas Into Reality.
-
-            </span>
-
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 mb-3.5">
+            {t('services.title')}{' '}
+            <span className="text-indigo-600">Turning Ideas Into Reality.</span>
           </h2>
-
-          <p className="max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-
-            I provide modern development and design services to help transform ideas into functional, beautiful, and reliable digital experiences.
-
-          </p>
-
-          <div className="flex items-center justify-center gap-3 mt-9">
-
-            <div className="w-12 h-px bg-gradient-to-r from-transparent to-blue-500" />
-
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-
-            <div className="w-20 h-1 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400" />
-
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
-
-            <div className="w-12 h-px bg-gradient-to-l from-transparent to-purple-500" />
-
-          </div>
-
         </motion.div>
 
-        {/* SERVICE GRID */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-
+        {/* Compact Services Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
           {services.map((service, index) => (
-
             <ServiceCard
               key={service.id}
               service={service}
@@ -691,524 +478,243 @@ export default function Services() {
               inView={inView}
               onClick={setSelectedService}
             />
-
           ))}
-
         </div>
 
-        {/* SERVICE BOTTOM STATISTICS */}
-
+        {/* Service Pillars Summary */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.7 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-16"
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10"
         >
-
-          <div className="p-6 rounded-2xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 flex items-center gap-4">
-
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-
-              <Globe className="w-6 h-6 text-blue-500" />
-
+          <div className="p-4 rounded-2xl border border-slate-200/90 bg-white/90 flex items-center gap-3.5 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shrink-0">
+              <Globe className="w-5 h-5" />
             </div>
-
             <div>
-
-              <h4 className="text-xl font-black text-zinc-900 dark:text-white">
-
-                Web
-
-              </h4>
-
-              <p className="text-xs text-zinc-500 font-semibold">
-
-                Digital Experiences
-
-              </p>
-
+              <h4 className="text-base font-black text-slate-900">Web</h4>
+              <p className="font-mono text-xs text-slate-500">Digital Experiences</p>
             </div>
-
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 flex items-center gap-4">
-
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-
-              <Server className="w-6 h-6 text-purple-500" />
-
+          <div className="p-4 rounded-2xl border border-slate-200/90 bg-white/90 flex items-center gap-3.5 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200/70 text-violet-600 flex items-center justify-center shrink-0">
+              <Server className="w-5 h-5" />
             </div>
-
             <div>
-
-              <h4 className="text-xl font-black text-zinc-900 dark:text-white">
-
-                Backend
-
-              </h4>
-
-              <p className="text-xs text-zinc-500 font-semibold">
-
-                APIs & Databases
-
-              </p>
-
+              <h4 className="text-base font-black text-slate-900">Backend</h4>
+              <p className="font-mono text-xs text-slate-500">APIs &amp; Databases</p>
             </div>
-
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 flex items-center gap-4">
-
-            <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center">
-
-              <MonitorSmartphone className="w-6 h-6 text-pink-500" />
-
+          <div className="p-4 rounded-2xl border border-slate-200/90 bg-white/90 flex items-center gap-3.5 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0">
+              <MonitorSmartphone className="w-5 h-5" />
             </div>
-
             <div>
-
-              <h4 className="text-xl font-black text-zinc-900 dark:text-white">
-
-                Full Stack
-
-              </h4>
-
-              <p className="text-xs text-zinc-500 font-semibold">
-
-                Complete Applications
-
-              </p>
-
+              <h4 className="text-base font-black text-slate-900">Full Stack</h4>
+              <p className="font-mono text-xs text-slate-500">Complete Applications</p>
             </div>
-
           </div>
-
         </motion.div>
 
-        {/* CTA BANNER */}
-
+        {/* CTA Banner */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={inView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.7, delay: 0.8 }}
-          className="relative mt-24 p-[1px] rounded-[32px] bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400"
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, delay: 0.25 }}
+          className="mt-12 rounded-3xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6"
         >
-
-          <div className="relative overflow-hidden rounded-[31px] bg-white dark:bg-[#11111e] p-9 md:p-14 text-center">
-
-            <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-blue-500/10 blur-[100px]" />
-
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-purple-500/10 blur-[100px]" />
-
-            <div className="relative z-10">
-
-              <motion.div
-                animate={{
-                  y: [0, -8, 0],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
-                className="w-20 h-20 mx-auto mb-7 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-purple-500/30"
-              >
-
-                <Rocket className="w-10 h-10 text-white" />
-
-              </motion.div>
-
-              <h3 className="text-3xl md:text-4xl font-black text-zinc-900 dark:text-white mb-5">
-
-                Have an Idea? Let's Build It.
-
-              </h3>
-
-              <p className="max-w-2xl mx-auto text-base text-zinc-600 dark:text-zinc-400 leading-relaxed mb-9">
-
-                Whether you need a modern website, a powerful backend, or a complete application, let's discuss your project and explore how I can help.
-
-              </p>
-
-              <a
-                href="#contact"
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-black hover:scale-105 transition-transform duration-300 shadow-xl"
-              >
-
-                Let's Work Together
-
-                <ArrowRight className="w-5 h-5" />
-
-              </a>
-
+          <div className="flex items-start gap-4 max-w-2xl">
+            <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+              <Rocket className="w-5 h-5" />
             </div>
-
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+                Have an Idea? Let&apos;s Build It.
+              </h3>
+              <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                Whether you need a web interface, a backend API, or a complete application, let&apos;s map out your scope.
+              </p>
+            </div>
           </div>
 
+          <a
+            href="#contact"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-indigo-600 transition-colors shrink-0"
+          >
+            <span>Let&apos;s Work Together</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
         </motion.div>
-
       </div>
 
       {/* ======================================
-          SERVICE DETAILS MODAL
+          SERVICE DETAILS MODAL (WHITE)
       ====================================== */}
-
       <AnimatePresence>
-
         {selectedService && (
-
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6"
           >
-
-            {/* BACKDROP */}
-
             <div
-              className="absolute inset-0 bg-black/85 backdrop-blur-xl"
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs"
               onClick={closeModal}
             />
 
-            {/* MODAL */}
-
             <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.85,
-                y: 50
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.9,
-                y: 30
-              }}
-              transition={{
-                duration: 0.4,
-                ease: 'easeOut'
-              }}
-              className="relative w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden rounded-[28px] bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.5)]"
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-white text-slate-900 border border-slate-200 shadow-2xl"
             >
-
-              {/* MODAL HEADER */}
-
-              <div className="relative z-10 flex items-center justify-between gap-3 px-5 sm:px-7 py-5 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#11111e]">
-
+              {/* Modal Header */}
+              <div className="flex items-center justify-between gap-3 px-5 sm:px-7 py-4 border-b border-slate-200 bg-white">
                 <button
+                  type="button"
                   onClick={closeModal}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-zinc-600 dark:text-zinc-300"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-
-                  <ArrowLeft className="w-5 h-5" />
-
-                  <span className="hidden sm:block font-semibold">
-
-                    Back
-
-                  </span>
-
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
                 </button>
 
-                <div className="flex-1 min-w-0 text-center">
-
-                  <span className="block text-xs font-bold uppercase tracking-widest text-blue-500 mb-1">
-
+                <div className="text-center min-w-0">
+                  <span className="block font-mono text-[10px] font-bold uppercase tracking-widest text-indigo-600">
                     Service Details
-
                   </span>
-
-                  <h3 className="text-base sm:text-xl font-black text-zinc-900 dark:text-white truncate">
-
+                  <h3 className="text-base sm:text-xl font-black text-slate-900 truncate">
                     {selectedService.title}
-
                   </h3>
-
                 </div>
 
                 <button
+                  type="button"
                   onClick={closeModal}
                   aria-label="Close service details"
-                  className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-red-500 hover:text-white transition-all text-zinc-500"
+                  className="w-9 h-9 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-900 hover:text-white transition-colors"
                 >
-
-                  <X className="w-6 h-6" />
-
+                  <X className="w-4 h-4" />
                 </button>
-
               </div>
 
-              {/* MODAL BODY */}
-
-              <div className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-[#080812] p-5 sm:p-8">
-
-                <div className="max-w-3xl mx-auto space-y-8">
-
-                  {/* SERVICE HERO */}
-
-                  <div className={`relative overflow-hidden rounded-3xl p-7 sm:p-9 ${selectedService.bg} border border-zinc-200 dark:border-white/10`}>
-
-                    <div className="relative z-10 flex items-center gap-5">
-
-                      <div className="w-16 h-16 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center shadow-lg">
-
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto bg-slate-50/60 p-5 sm:p-8">
+                <div className="max-w-3xl mx-auto space-y-6">
+                  {/* Hero Block */}
+                  <div className="rounded-3xl p-6 sm:p-8 bg-white border border-slate-200 shadow-2xs">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${selectedService.badgeClass}`}
+                      >
                         {(() => {
                           const Icon = selectedService.icon;
-
-                          return (
-                            <Icon className={`w-9 h-9 ${selectedService.color}`} />
-                          );
+                          return <Icon className="w-7 h-7" />;
                         })()}
-
                       </div>
-
                       <div>
-
-                        <span className={`text-xs font-black uppercase tracking-widest ${selectedService.color}`}>
-
+                        <span className="block font-mono text-xs font-bold uppercase tracking-wider text-indigo-600">
                           {selectedService.subtitle}
-
                         </span>
-
-                        <h4 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mt-2">
-
+                        <h4 className="text-2xl sm:text-3xl font-black text-slate-900">
                           {selectedService.title}
-
                         </h4>
-
                       </div>
-
                     </div>
 
-                    <p className="relative z-10 text-sm leading-7 text-zinc-700 dark:text-zinc-300 mt-6">
-
+                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                       {selectedService.description}
-
                     </p>
-
                   </div>
 
-                  {/* DEFINITION */}
-
-                  <div>
-
-                    <h4 className="flex items-center gap-3 text-lg font-black text-zinc-900 dark:text-white mb-4">
-
-                      <span className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
-
-                        <Workflow className="w-5 h-5 text-blue-500" />
-
-                      </span>
-
-                      What Is This Service?
-
+                  {/* Definition */}
+                  <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-2xs">
+                    <h4 className="flex items-center gap-2.5 text-base font-black text-slate-900 mb-3">
+                      <Workflow className="w-4 h-4 text-indigo-600" />
+                      <span>What Is This Service?</span>
                     </h4>
-
-                    <p className="p-6 rounded-2xl bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10 text-sm leading-8 text-zinc-600 dark:text-zinc-400">
-
+                    <p className="text-sm text-slate-600 leading-relaxed">
                       {selectedService.definition}
-
                     </p>
-
                   </div>
 
-                  {/* WHAT I WILL BUILD */}
-
-                  <div>
-
-                    <h4 className="flex items-center gap-3 text-lg font-black text-zinc-900 dark:text-white mb-4">
-
-                      <span className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
-
-                        <Rocket className="w-5 h-5 text-purple-500" />
-
-                      </span>
-
-                      What I Can Build
-
+                  {/* What I Can Build */}
+                  <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-2xs">
+                    <h4 className="flex items-center gap-2.5 text-base font-black text-slate-900 mb-3">
+                      <Terminal className="w-4 h-4 text-indigo-600" />
+                      <span>What I Can Build</span>
                     </h4>
-
-                    <p className="p-6 rounded-2xl bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10 text-sm leading-8 text-zinc-600 dark:text-zinc-400">
-
+                    <p className="text-sm text-slate-600 leading-relaxed">
                       {selectedService.whatIWillBuild}
-
                     </p>
-
                   </div>
 
-                  {/* FEATURES */}
-
-                  <div>
-
-                    <h4 className="flex items-center gap-3 text-lg font-black text-zinc-900 dark:text-white mb-5">
-
-                      <span className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-
-                      </span>
-
-                      Key Features
-
+                  {/* Key Features */}
+                  <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-2xs">
+                    <h4 className="flex items-center gap-2.5 text-base font-black text-slate-900 mb-4">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Key Features</span>
                     </h4>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
                       {selectedService.features.map((feature) => (
-
                         <div
                           key={feature}
-                          className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10"
+                          className="flex items-center gap-2.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 text-sm font-medium text-slate-700"
                         >
-
-                          <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-500" />
-
-                          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-
-                            {feature}
-
-                          </span>
-
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>{feature}</span>
                         </div>
-
                       ))}
-
                     </div>
-
                   </div>
 
-                  {/* TECHNOLOGIES */}
-
-                  <div>
-
-                    <h4 className="flex items-center gap-3 text-lg font-black text-zinc-900 dark:text-white mb-5">
-
-                      <span className="w-9 h-9 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-
-                        <Code2 className="w-5 h-5 text-cyan-500" />
-
-                      </span>
-
-                      Technologies
-
+                  {/* Technologies */}
+                  <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-2xs">
+                    <h4 className="flex items-center gap-2.5 text-base font-black text-slate-900 mb-4">
+                      <Code2 className="w-4 h-4 text-indigo-600" />
+                      <span>Technologies</span>
                     </h4>
-
-                    <div className="flex flex-wrap gap-3">
-
+                    <div className="flex flex-wrap gap-2">
                       {selectedService.technologies.map((tech) => (
-
                         <span
                           key={tech}
-                          className="px-4 py-3 rounded-xl bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10 text-sm font-bold text-zinc-700 dark:text-zinc-300 shadow-sm"
+                          className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200/70 font-mono text-xs font-semibold text-indigo-700"
                         >
-
                           {tech}
-
                         </span>
-
                       ))}
-
                     </div>
-
                   </div>
 
-                  {/* DELIVERABLES */}
-
-                  <div>
-
-                    <h4 className="flex items-center gap-3 text-lg font-black text-zinc-900 dark:text-white mb-5">
-
-                      <span className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center">
-
-                        <Layers className="w-5 h-5 text-orange-500" />
-
-                      </span>
-
-                      What You Can Get
-
+                  {/* Deliverables */}
+                  <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-2xs">
+                    <h4 className="flex items-center gap-2.5 text-base font-black text-slate-900 mb-4">
+                      <Layers className="w-4 h-4 text-indigo-600" />
+                      <span>What You Can Get</span>
                     </h4>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
                       {selectedService.deliverables.map((item) => (
-
                         <div
                           key={item}
-                          className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10"
+                          className="flex items-center gap-2.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 text-sm font-bold text-slate-800"
                         >
-
-                          <Zap className="w-4 h-4 flex-shrink-0 text-orange-500" />
-
-                          <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-
-                            {item}
-
-                          </span>
-
+                          <Zap className="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span>{item}</span>
                         </div>
-
                       ))}
-
                     </div>
-
                   </div>
-
-                  {/* CONTACT CTA */}
-
-                  <div className="p-7 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-
-                    <div className="flex items-center gap-3 mb-3">
-
-                      <Sparkles className="w-6 h-6" />
-
-                      <h4 className="text-xl font-black">
-
-                        Ready to Start?
-
-                      </h4>
-
-                    </div>
-
-                    <p className="text-sm text-white/80 leading-7 mb-6">
-
-                      Let's discuss your project, understand your requirements, and explore the right solution.
-
-                    </p>
-
-                    <a
-                      href="#contact"
-                      onClick={closeModal}
-                      className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white text-zinc-900 font-black hover:scale-105 transition-transform"
-                    >
-
-                      Contact Me
-
-                      <ArrowRight className="w-5 h-5" />
-
-                    </a>
-
-                  </div>
-
                 </div>
-
               </div>
-
             </motion.div>
-
           </motion.div>
-
         )}
-
       </AnimatePresence>
-
     </section>
-
   );
-
 }

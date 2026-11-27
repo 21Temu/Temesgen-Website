@@ -1,28 +1,28 @@
-
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'motion/react';
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  useTransform
+} from 'motion/react';
 import { useInView } from 'react-intersection-observer';
-
 import {
   Briefcase,
   GraduationCap,
   Code2,
   Rocket,
-  Sparkles,
   CalendarDays,
   MapPin,
   ArrowUpRight,
-  ChevronDown,
-  Terminal,
+  ChevronRight,
   Laptop,
-  Layers,
-  Award
+  Award,
+  GitBranch,
+  X,
+  ArrowLeft
 } from 'lucide-react';
-
-// ==========================================
-// EXPERIENCE INTERFACE
-// ==========================================
 
 interface ExperienceItem {
   id: number;
@@ -33,704 +33,440 @@ interface ExperienceItem {
   description: string;
   details: string[];
   icon: typeof Briefcase;
-  color: string;
+  badgeClass: string;
   category: 'education' | 'experience' | 'development';
   current?: boolean;
 }
 
-// ==========================================
-// EXPERIENCE CARD
-// ==========================================
-
 function ExperienceCard({
   experience,
   index,
-  inView
+  inView,
+  onSelect
 }: {
   experience: ExperienceItem;
   index: number;
   inView: boolean;
+  onSelect: (item: ExperienceItem) => void;
 }) {
-
-  const [expanded, setExpanded] = useState(false);
-
   const Icon = experience.icon;
 
-  const isLeft = index % 2 === 0;
-
   return (
-
     <motion.div
-      initial={{
-        opacity: 0,
-        x: isLeft ? -80 : 80,
-        rotateY: isLeft ? -8 : 8
-      }}
-      animate={inView ? {
-        opacity: 1,
-        x: 0,
-        rotateY: 0
-      } : {}}
-      transition={{
-        duration: 0.8,
-        delay: index * 0.2,
-        ease: 'easeOut'
-      }}
-      className={`relative w-full md:w-1/2 ${
-        isLeft
-          ? 'md:pr-16 md:mr-auto'
-          : 'md:pl-16 md:ml-auto'
-      }`}
+      initial={{ opacity: 0, y: 18 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.45, delay: index * 0.08, ease: 'easeOut' }}
     >
-
-      {/* TIMELINE CONNECTOR */}
-
-      <div
-        className={`hidden md:block absolute top-12 w-16 h-px bg-gradient-to-r from-blue-500/60 to-purple-500/60 ${
-          isLeft ? 'right-0' : 'left-0'
-        }`}
-      />
-
-      {/* MOBILE CONNECTOR */}
-
-      <div className="md:hidden absolute left-[-30px] top-12 w-7 h-px bg-gradient-to-r from-blue-500 to-purple-500" />
-
-      {/* CARD */}
-
-      <motion.div
-        whileHover={{
-          y: -8,
-          scale: 1.015
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 250,
-          damping: 20
-        }}
-        className="group relative"
+      <button
+        type="button"
+        onClick={() => onSelect(experience)}
+        aria-label={`Open details for ${experience.title}`}
+        className="group w-full text-left rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md px-4 py-3.5 sm:px-5 sm:py-4 shadow-2xs hover:border-indigo-400 hover:shadow-md transition-all duration-200 flex items-center justify-between gap-3.5 cursor-pointer"
       >
-
-        {/* GLOW BORDER */}
-
-        <div className="absolute -inset-[1px] rounded-[27px] bg-gradient-to-br from-blue-500/50 via-purple-500/20 to-cyan-500/50 opacity-40 group-hover:opacity-100 blur-[1px] transition-opacity duration-500" />
-
-        <div className="relative overflow-hidden rounded-[26px] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#11111e] p-7 sm:p-8 shadow-xl group-hover:shadow-[0_20px_70px_rgba(99,102,241,0.15)] transition-shadow duration-500">
-
-          {/* CARD DECORATION */}
-
-          <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-blue-500/10 blur-[70px] pointer-events-none" />
-
-          {/* CARD TOP */}
-
-          <div className="relative flex items-start justify-between gap-4 mb-7">
-
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${experience.color} shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500`}>
-
-              <Icon className="w-7 h-7 text-white" />
-
-            </div>
-
-            {experience.current && (
-
-              <span className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold">
-
-                <span className="relative flex w-2 h-2">
-
-                  <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
-
-                </span>
-
-                CURRENT
-
-              </span>
-
-            )}
-
-          </div>
-
-          {/* DATE */}
-
-          <div className="flex items-center gap-2 text-blue-500 dark:text-cyan-400 mb-4">
-
-            <CalendarDays className="w-4 h-4" />
-
-            <span className="text-xs font-bold uppercase tracking-widest">
-
-              {experience.date}
-
-            </span>
-
-          </div>
-
-          {/* TITLE */}
-
-          <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white mb-2 leading-tight">
-
-            {experience.title}
-
-          </h3>
-
-          {/* COMPANY */}
-
-          <h4 className="flex items-center gap-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 mb-5">
-
-            <MapPin className="w-4 h-4 text-purple-500 shrink-0" />
-
-            {experience.company}
-
-          </h4>
-
-          {/* CATEGORY */}
-
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-500 text-xs font-bold mb-5">
-
-            {experience.type}
-
-          </span>
-
-          {/* DESCRIPTION */}
-
-          <p className="text-sm leading-7 text-zinc-600 dark:text-zinc-400">
-
-            {experience.description}
-
-          </p>
-
-          {/* EXPAND DETAILS */}
-
-          <AnimatePresence>
-
-            {expanded && (
-
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  height: 0
-                }}
-                animate={{
-                  opacity: 1,
-                  height: 'auto'
-                }}
-                exit={{
-                  opacity: 0,
-                  height: 0
-                }}
-                className="overflow-hidden"
-              >
-
-                <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-white/10">
-
-                  <h5 className="text-sm font-bold text-zinc-900 dark:text-white mb-4">
-
-                    Key Highlights
-
-                  </h5>
-
-                  <div className="space-y-3">
-
-                    {experience.details.map((detail, detailIndex) => (
-
-                      <div
-                        key={detailIndex}
-                        className="flex items-start gap-3"
-                      >
-
-                        <div className="mt-1 w-5 h-5 shrink-0 rounded-full bg-blue-500/10 flex items-center justify-center">
-
-                          <ArrowUpRight className="w-3 h-3 text-blue-500" />
-
-                        </div>
-
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-
-                          {detail}
-
-                        </p>
-
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                </div>
-
-              </motion.div>
-
-            )}
-
-          </AnimatePresence>
-
-          {/* EXPAND BUTTON */}
-
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="mt-7 pt-5 w-full border-t border-zinc-200 dark:border-white/10 flex items-center justify-between text-sm font-bold text-blue-500 hover:text-purple-500 transition-colors"
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${experience.badgeClass}`}
           >
+            <Icon className="w-4 h-4" />
+          </div>
 
-            <span>
-
-              {expanded ? 'Show Less' : 'Explore Details'}
-
-            </span>
-
-            <motion.div
-              animate={{
-                rotate: expanded ? 180 : 0
-              }}
-              transition={{
-                duration: 0.3
-              }}
-            >
-
-              <ChevronDown className="w-5 h-5" />
-
-            </motion.div>
-
-          </button>
-
+          <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+            {experience.title}
+          </h3>
         </div>
 
-      </motion.div>
-
+        <div className="flex items-center gap-2 shrink-0">
+          {experience.current && (
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-[10px] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>ACTIVE</span>
+            </span>
+          )}
+          <span className="w-7 h-7 rounded-lg bg-slate-50 group-hover:bg-indigo-50 border border-slate-200/80 group-hover:border-indigo-200 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
+            <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </span>
+        </div>
+      </button>
     </motion.div>
-
   );
-
 }
 
-// ==========================================
-// MAIN EXPERIENCE COMPONENT
-// ==========================================
-
 export default function Experience() {
-
   const { t } = useTranslation();
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1
   });
 
-  // ==========================================
-  // EXPERIENCE DATA
-  // Edit these entries to match your real history.
-  // ==========================================
+  const [selectedExperience, setSelectedExperience] =
+    useState<ExperienceItem | null>(null);
+
+  // 3D software background parallax (-0.5 to 0.5)
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+
+  const smoothX = useSpring(pointerX, { stiffness: 120, damping: 22 });
+  const smoothY = useSpring(pointerY, { stiffness: 120, damping: 22 });
+
+  const gridRotateX = useTransform(smoothY, [-0.5, 0.5], [66, 56]);
+  const gridRotateZ = useTransform(smoothX, [-0.5, 0.5], [-8, 8]);
+  const gridPanX = useTransform(smoothX, [-0.5, 0.5], [-34, 34]);
+  const gridPanY = useTransform(smoothY, [-0.5, 0.5], [-26, 26]);
+
+  const depthBackX = useTransform(smoothX, [-0.5, 0.5], [-22, 22]);
+  const depthBackY = useTransform(smoothY, [-0.5, 0.5], [-18, 18]);
+  const depthFrontX = useTransform(smoothX, [-0.5, 0.5], [34, -34]);
+  const depthFrontY = useTransform(smoothY, [-0.5, 0.5], [28, -28]);
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = sectionRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    pointerX.set(x);
+    pointerY.set(y);
+  };
+
+  const handlePointerLeave = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
+
+  useEffect(() => {
+    if (selectedExperience) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedExperience]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedExperience(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const experiences: ExperienceItem[] = [
-
     {
       id: 1,
-
       title: 'Software Engineering Student',
-
       company: 'Mekdela Amba University',
-
       date: 'Your actual study period',
-
       type: 'Education',
-
       description:
         'Studying Software Engineering with a focus on software development, programming, database systems, and modern application architecture.',
-
       details: [
         'Learning software engineering principles and application development.',
         'Working with programming languages, databases, and web technologies.',
         'Developing practical software projects to strengthen technical skills.'
       ],
-
       icon: GraduationCap,
-
-      color: 'from-blue-500 to-indigo-600',
-
+      badgeClass: 'bg-indigo-600 text-white',
       category: 'education'
-
     },
-
     {
       id: 2,
-
       title: 'Junior Full Stack Developer',
-
       company: 'Personal & Academic Projects',
-
       date: 'Your actual development period',
-
       type: 'Software Development',
-
       description:
         'Building full-stack web applications using React, Django REST Framework, and PostgreSQL, focusing on responsive interfaces, REST APIs, and database-driven applications.',
-
       details: [
         'Building interactive frontend applications with React and JavaScript.',
         'Developing backend APIs using Django REST Framework.',
         'Working with PostgreSQL databases and application integration.',
         'Creating complete web applications with authentication and management features.'
       ],
-
       icon: Code2,
-
-      color: 'from-purple-500 to-pink-600',
-
+      badgeClass: 'bg-violet-600 text-white',
       category: 'development'
-
     },
-
     {
       id: 3,
-
       title: 'Full Stack Application Development',
-
       company: 'Independent Projects',
-
       date: 'Ongoing',
-
       type: 'Project Development',
-
       description:
         'Designing and developing real-world applications, including e-commerce platforms, portfolio websites, and a university distance education management system.',
-
       details: [
         'Developing e-commerce functionality and administration dashboards.',
         'Building a distance education management platform.',
         'Integrating frontend interfaces with backend REST APIs.',
         'Exploring AI-powered features and modern development tools.'
       ],
-
       icon: Rocket,
-
-      color: 'from-orange-500 to-red-600',
-
+      badgeClass: 'bg-slate-900 text-white',
       category: 'experience',
-
       current: true
-
     }
-
   ];
 
-  // ==========================================
-  // RENDER
-  // ==========================================
+  const expLogs = [
+    '0xE01  timeline.init(3 milestones)',
+    '11001  stack: react · django · postgres',
+    '0x9A3  status: continuous learning'
+  ];
+
+  const closeModal = () => setSelectedExperience(null);
 
   return (
-
     <section
+      ref={sectionRef}
       id="experience"
-      className="relative py-28 md:py-36 overflow-hidden bg-zinc-50 dark:bg-[#080812] transition-colors duration-500"
+      onMouseMove={handlePointerMove}
+      onMouseLeave={handlePointerLeave}
+      style={{ perspective: '1250px' }}
+      className="relative py-20 bg-white text-slate-900 overflow-hidden border-t border-slate-100"
     >
-
       {/* ======================================
-          BACKGROUND EFFECTS
+          SOFTWARE 3D ANIMATED BACKGROUND
       ====================================== */}
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
-          animate={{
-            x: [0, 70, -30, 0],
-            y: [0, -50, 40, 0],
-            scale: [1, 1.2, 0.9, 1]
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[140px]"
+          style={{ x: depthBackX, y: depthBackY }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-24 right-[14%] w-[440px] h-[440px] rounded-full bg-indigo-200/35 blur-[120px]"
+        />
+        <motion.div
+          style={{ x: depthFrontX, y: depthFrontY }}
+          animate={{ scale: [1.08, 0.95, 1.08] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-12 -left-24 w-[420px] h-[420px] rounded-full bg-emerald-200/30 blur-[120px]"
         />
 
-        <motion.div
-          animate={{
-            x: [0, -60, 30, 0],
-            y: [0, 50, -30, 0],
-            scale: [1, 0.9, 1.2, 1]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          className="absolute bottom-0 -right-40 w-[500px] h-[500px] rounded-full bg-purple-500/10 blur-[140px]"
-        />
-
+        {/* 3D Perspective Grid */}
         <div
-          className="absolute inset-0 opacity-[0.035] dark:opacity-[0.05]"
+          className="absolute inset-x-0 bottom-[-26%] h-[74%] flex items-center justify-center"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: '55px 55px'
+            perspective: '900px',
+            maskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)'
           }}
-        />
-
-      </div>
-
-      {/* ======================================
-          CONTENT
-      ====================================== */}
-
-      <div
-        ref={ref}
-        className="relative z-10 max-w-6xl mx-auto px-6"
-      >
-
-        {/* ======================================
-            SECTION HEADER
-        ====================================== */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 50
-          }}
-          animate={inView ? {
-            opacity: 1,
-            y: 0
-          } : {}}
-          transition={{
-            duration: 0.8
-          }}
-          className="text-center mb-24"
         >
-
-          {/* Badge */}
-
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-7">
-
-            <Sparkles className="w-4 h-4 text-purple-500" />
-
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-purple-600 dark:text-purple-400">
-
-              My Journey
-
-            </span>
-
-          </div>
-
-          {/* Title */}
-
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-zinc-900 dark:text-white mb-7">
-
-            {t('experience.title')}
-
-            <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400">
-
-              Experience & Growth.
-
-            </span>
-
-          </h2>
-
-          {/* Description */}
-
-          <p className="max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-
-            Every project, challenge, and learning experience has helped shape my journey as a software developer.
-
-          </p>
-
-          {/* Decoration */}
-
-          <div className="flex items-center justify-center gap-3 mt-9">
-
-            <div className="w-12 h-px bg-gradient-to-r from-transparent to-blue-500" />
-
-            <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_12px_#3b82f6]" />
-
-            <div className="w-20 h-1 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400" />
-
-            <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_12px_#a855f7]" />
-
-            <div className="w-12 h-px bg-gradient-to-l from-transparent to-purple-500" />
-
-          </div>
-
-        </motion.div>
-
-        {/* ======================================
-            TIMELINE
-        ====================================== */}
-
-        <div className="relative">
-
-          {/* CENTER TIMELINE LINE */}
-
-          <div className="absolute left-[14px] md:left-1/2 top-0 bottom-0 w-[2px] md:-translate-x-1/2 bg-zinc-300 dark:bg-white/10" />
-
-          {/* ANIMATED TIMELINE */}
-
           <motion.div
-            initial={{
-              height: 0
+            style={{
+              rotateX: gridRotateX,
+              rotateZ: gridRotateZ,
+              x: gridPanX,
+              y: gridPanY,
+              transformStyle: 'preserve-3d'
             }}
-            animate={inView ? {
-              height: '100%'
-            } : {}}
+            animate={{ backgroundPosition: ['0px 0px', '0px 56px'] }}
             transition={{
-              duration: 2.5,
-              ease: 'easeInOut'
+              backgroundPosition: { duration: 3.6, repeat: Infinity, ease: 'linear' }
             }}
-            className="absolute left-[14px] md:left-1/2 top-0 w-[2px] md:-translate-x-1/2 bg-gradient-to-b from-blue-500 via-purple-500 to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+            className="w-[175%] h-[175%] border-t border-indigo-200/80"
+            ref={(el) => {
+              if (el) {
+                el.style.backgroundImage =
+                  'linear-gradient(to right, rgba(79, 70, 229, 0.13) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.12) 1px, transparent 1px)';
+                el.style.backgroundSize = '56px 56px';
+              }
+            }}
           />
-
-          {/* TIMELINE ITEMS */}
-
-          <div className="relative space-y-14 md:space-y-20 pl-10 md:pl-0">
-
-            {experiences.map((experience, index) => (
-
-              <div
-                key={experience.id}
-                className="relative"
-              >
-
-                {/* TIMELINE NODE */}
-
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    scale: 0
-                  }}
-                  animate={inView ? {
-                    opacity: 1,
-                    scale: 1
-                  } : {}}
-                  transition={{
-                    delay: index * 0.2 + 0.3,
-                    duration: 0.5
-                  }}
-                  className="absolute -left-[39px] md:left-1/2 md:-translate-x-1/2 top-8 z-20"
-                >
-
-                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-[#080812] border-2 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
-
-                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-blue-500 to-purple-500" />
-
-                    <div className="absolute inset-0 rounded-full border border-blue-500/50 animate-ping" />
-
-                  </div>
-
-                </motion.div>
-
-                <ExperienceCard
-                  experience={experience}
-                  index={index}
-                  inView={inView}
-                />
-
-              </div>
-
-            ))}
-
-          </div>
-
-          {/* TIMELINE END */}
-
-          <div className="relative flex justify-center mt-16 md:mt-20">
-
-            <div className="absolute top-[-80px] left-[14px] md:left-1/2 -translate-x-1/2 w-[2px] h-20 bg-gradient-to-b from-cyan-400 to-transparent" />
-
-            <div className="relative z-10 flex items-center gap-3 px-6 py-3 rounded-full bg-white dark:bg-[#11111e] border border-zinc-200 dark:border-white/10 shadow-xl">
-
-              <Sparkles className="w-4 h-4 text-purple-500" />
-
-              <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-
-                The Journey Continues
-
-              </span>
-
-            </div>
-
-          </div>
-
         </div>
 
-        {/* ======================================
-            BOTTOM SKILLS BANNER
-        ====================================== */}
-
+        {/* Floating 3D Wireframe Node */}
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 40
+          style={{ x: depthFrontX, y: depthFrontY, transformStyle: 'preserve-3d' }}
+          animate={{
+            rotateX: [20, 44, 20],
+            rotateY: [0, 180, 360],
+            y: [0, -12, 0]
           }}
-          animate={inView ? {
-            opacity: 1,
-            y: 0
-          } : {}}
-          transition={{
-            duration: 0.8,
-            delay: 0.8
-          }}
-          className="relative mt-28 p-[1px] rounded-[30px] bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-cyan-500/50"
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          className="hidden md:flex items-center justify-center absolute top-24 right-[6%] w-14 h-14 rounded-2xl border border-indigo-300/80 bg-white/85 font-mono text-[10px] font-semibold text-indigo-600 shadow-2xs"
         >
-
-          <div className="relative overflow-hidden rounded-[29px] bg-white dark:bg-[#11111e] p-8 md:p-10">
-
-            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-purple-500/10 blur-[80px]" />
-
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-
-              <div className="text-center md:text-left">
-
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
-
-                  <Award className="w-5 h-5 text-blue-500" />
-
-                  <span className="text-xs font-bold uppercase tracking-widest text-blue-500">
-
-                    Always Improving
-
-                  </span>
-
-                </div>
-
-                <h3 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-3">
-
-                  Learning Never Stops.
-
-                </h3>
-
-                <p className="max-w-xl text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
-
-                  Continuously exploring new technologies, improving my development skills, and building better digital experiences.
-
-                </p>
-
-              </div>
-
-              <motion.div
-                animate={{
-                  y: [0, -8, 0],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
-                className="shrink-0 w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-xl shadow-purple-500/20"
-              >
-
-                <Laptop className="w-10 h-10 text-white" />
-
-              </motion.div>
-
-            </div>
-
-          </div>
-
+          0xEXP
         </motion.div>
 
+        {/* Software Telemetry Streams */}
+        <motion.div
+          style={{ x: depthBackX, y: depthBackY }}
+          className="hidden xl:flex flex-col gap-2 absolute top-28 right-[24%] font-mono text-[11px] text-slate-600/80"
+        >
+          {expLogs.map((line, idx) => (
+            <motion.div
+              key={line}
+              animate={{ opacity: [0.4, 0.88, 0.4], x: [0, -6, 0] }}
+              transition={{ duration: 4 + idx, repeat: Infinity, ease: 'easeInOut' }}
+              className="px-3 py-1 rounded-md bg-white/85 border border-slate-200/80 shadow-2xs"
+            >
+              {line}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
 
+      {/* ======================================
+          MAIN CONTENT
+      ====================================== */}
+      <div ref={ref} className="relative z-10 max-w-4xl mx-auto px-6">
+        {/* Centered Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="max-w-2xl mx-auto text-center mb-10"
+        >
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-200 bg-indigo-50/90 text-indigo-700 text-xs font-mono font-semibold mb-3.5">
+            <GitBranch className="w-3.5 h-3.5" />
+            <span>My Journey</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 mb-3">
+            {t('experience.title')}{' '}
+            <span className="text-indigo-600">Experience &amp; Growth.</span>
+          </h2>
+
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Click any milestone card to view full details, role scope, and key highlights.
+          </p>
+        </motion.div>
+
+        {/* Compact Title-Only Cards List */}
+        <div className="max-w-2xl mx-auto space-y-3">
+          {experiences.map((experience, index) => (
+            <ExperienceCard
+              key={experience.id}
+              experience={experience}
+              index={index}
+              inView={inView}
+              onSelect={setSelectedExperience}
+            />
+          ))}
+        </div>
+
+        {/* Bottom Continuous Learning Strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, delay: 0.25 }}
+          className="max-w-2xl mx-auto mt-10 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 sm:p-6 shadow-2xs flex items-start gap-4"
+        >
+          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+            <Laptop className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-indigo-600 mb-0.5">
+              <Award className="w-3.5 h-3.5" />
+              <span>Always Improving</span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-black text-slate-900">
+              Learning Never Stops.
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+              Continuously exploring modern web and backend architectures, API design, and practical software delivery.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ======================================
+          EXPERIENCE DETAIL MODAL
+      ====================================== */}
+      <AnimatePresence>
+        {selectedExperience && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+          >
+            <div
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs"
+              onClick={closeModal}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 14 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="relative w-full max-w-xl rounded-3xl bg-white text-slate-900 border border-slate-200 shadow-2xl overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200 bg-slate-50/70">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
+
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+                  {selectedExperience.type}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  aria-label="Close details"
+                  className="w-8 h-8 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-900 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 leading-snug">
+                    {selectedExperience.title}
+                  </h3>
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-xs sm:text-sm text-slate-500 font-semibold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      <span>{selectedExperience.company}</span>
+                    </span>
+
+                    <span className="inline-flex items-center gap-1.5 font-mono text-xs text-indigo-600">
+                      <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                      <span>{selectedExperience.date}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {selectedExperience.description}
+                </p>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                    Key Highlights
+                  </h4>
+                  <ul className="space-y-2.5">
+                    {selectedExperience.details.map((detail, detailIndex) => (
+                      <li
+                        key={detailIndex}
+                        className="flex items-start gap-2.5 text-sm text-slate-700"
+                      >
+                        <ArrowUpRight className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                        <span>{detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
-
   );
-
 }
